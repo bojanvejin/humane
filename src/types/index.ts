@@ -165,3 +165,23 @@ export interface UserTrackAggregate {
   playCount: number;
   updatedAt: Date;
 }
+
+// New types for player
+export interface PlayableTrack {
+  id: string;
+  title: string;
+  artistName: string;
+  coverArtUrl?: string;
+  audioUrl: string; // HLS stream URL or direct audio URL
+  duration: number; // in seconds
+}
+
+export interface PlayerState {
+  currentTrack: PlayableTrack | null;
+  isPlaying: boolean;
+  volume: number; // 0-1
+  currentTime: number; // in seconds
+  duration: number; // in seconds, of currentTrack
+  isLoading: boolean;
+  error: string | null;
+}

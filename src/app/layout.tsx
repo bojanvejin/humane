@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { FirebaseAppCheckProvider } from "@/components/providers/FirebaseAppCheckProvider";
-import { Toaster } from "@/components/ui/sonner"; // Assuming Sonner is used for toasts
+import { Toaster } from "@/components/ui/sonner";
+import { PlayerProvider } from "@/components/player/PlayerProvider"; // Import PlayerProvider
+import { MiniPlayer } from "@/components/player/MiniPlayer"; // Import MiniPlayer
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +34,11 @@ export default function RootLayout({
       >
         <FirebaseAppCheckProvider>
           <AuthProvider>
-            {children}
-            <Toaster /> {/* Add Sonner Toaster for notifications */}
+            <PlayerProvider> {/* Wrap children with PlayerProvider */}
+              {children}
+              <MiniPlayer /> {/* Render MiniPlayer at the root */}
+              <Toaster />
+            </PlayerProvider>
           </AuthProvider>
         </FirebaseAppCheckProvider>
       </body>
