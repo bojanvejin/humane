@@ -5,6 +5,7 @@ import { db, FieldValue } from '../firebaseAdmin';
 import { z } from 'zod';
 import { FraudReason } from '../types'; // Import FraudReason
 import { detectSuspiciousPlay } from '../utils/fraudDetection'; // Import fraud detection
+import { hashIpAddress } from '../utils/security'; // Import hashIpAddress
 
 const corsHandler = cors({ origin: true });
 
@@ -78,21 +79,39 @@ export const reportPlayBatch = onRequest(async (req, res) => {
     }
     const { plays } = parseResult.data;
 
+    // Get client IP and hash it
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const ipHashSalt = process.env.IP_HASH_SALT;
+
+    if (!ipHashSalt) {
+      console.error('IP_HASH_SALT environment variable is not set. IP addresses will not be hashed.');
+      res.status(500).json({ error: 'Internal Server Error', message: 'IP_HASH_SALT is not configured.' });
+      return;
+    }
+    const hashedIp = hashIpAddress(clientIp.toString(), ipHashSalt);
+
     const batch = db.batch();
     const yyyymm = new Date().toISOString().substring(0, 7).replace('-', ''); // YYYYMM format
 
     for (const play of plays) {
+      // Augment deviceInfo with the hashed IP
+      const augmentedDeviceInfo = {
+        ...play.deviceInfo,
+        ipAddress: hashedIp,
+      };
+
       // Initial fraud detection (can be refined in materializeRaw)
       const { isSuspicious, reasons, fraudScore } = detectSuspiciousPlay({
         duration: play.duration,
         trackFullDurationMs: play.trackFullDurationMs,
-        deviceInfo: play.deviceInfo,
+        deviceInfo: augmentedDeviceInfo,
       });
 
       const rawPlayRef = db.collection('plays_raw').doc(yyyymm).collection('events').doc(play.eventId);
       batch.set(rawPlayRef, {
         ...play,
         userId: userId, // Add userId from authenticated user
+        deviceInfo: augmentedDeviceInfo, // Store augmented device info
         suspicious: isSuspicious,
         fraudReasons: reasons.length > 0 ? (reasons as FraudReason[]) : FieldValue.delete(),
         fraudScore: fraudScore,
