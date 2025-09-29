@@ -60,7 +60,7 @@ if (typeof window !== 'undefined') {
 
     try {
       appCheckInstance = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(recaptchaSiteKey), // Use the validated key
+        provider: new ReCaptchaV3Provider(recaptchaSiteKey as string), // Use the validated key
         isTokenAutoRefreshEnabled: true,
       });
     } catch (e: any) {
