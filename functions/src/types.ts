@@ -99,6 +99,7 @@ export interface Play {
   suspicious: boolean;
   fraudReasons?: FraudReason[];
   fraudScore: number; // 0-1
+  weight?: number; // Added for UCPS calculation
   deviceInfo: {
     userAgent: string;
     ipAddress: string; // Hashed IP
@@ -116,6 +117,7 @@ export interface Subscription {
   currentPeriodEnd: Date;
   createdAt: Date;
   updatedAt: Date;
+  netMonthly: number; // Added for UCPS calculation
 }
 
 export interface Tip {
