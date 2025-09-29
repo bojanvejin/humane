@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
+import { Payload } from "recharts/types/component/DefaultTooltipContent" // Import Payload type
 
 import { cn } from "@/lib/utils"
 
@@ -12,6 +13,9 @@ export type ChartConfig = {
     color?: string
     icon?: React.ComponentType<{ className?: string }>
     format?: (value: number) => string
+  }
+  tooltip?: { // Added tooltip property
+    render?: (props: { active?: boolean; payload?: Payload<any, any>[]; label?: string | number }) => React.ReactNode;
   }
 } & {
   index?: number
@@ -103,11 +107,12 @@ const ChartTooltip = RechartsPrimitive.Tooltip
 
 type ChartTooltipContentProps = React.ComponentPropsWithoutRef<
   typeof RechartsPrimitive.Tooltip
-> & {
+> & React.HTMLAttributes<HTMLDivElement> & { // Extend HTMLDivElement attributes
   hideLabel?: boolean
   hideIndicator?: boolean
   nameKey?: string
   labelKey?: string
+  indicator?: "dot" | "line" // Explicitly add indicator prop
 }
 
 const ChartTooltipContent = React.forwardRef<
@@ -124,7 +129,7 @@ const ChartTooltipContent = React.forwardRef<
       hideIndicator = false,
       nameKey,
       labelKey,
-      ...props
+      ...props // Rest props for the div
     },
     ref
   ) => {
@@ -141,7 +146,7 @@ const ChartTooltipContent = React.forwardRef<
             "grid min-w-[130px] items-start text-xs border border-border bg-background p-2 shadow-lg",
             className
           )}
-          {...props}
+          {...props} // Pass rest props to the div
         >
           {!hideLabel && payload[0]?.name && (
             <div className="row-span-2 grid gap-0.5">
@@ -152,7 +157,7 @@ const ChartTooltipContent = React.forwardRef<
             </div>
           )}
           <div className="grid gap-1.5">
-            {payload.map((item: { dataKey?: string; name?: string; value?: any; color?: string; payload?: any }, index: number) => { // Explicitly type item
+            {payload.map((item: Payload<any, any>, index: number) => { // Use Recharts Payload type
               const key = `${nameKey || item.name || item.dataKey || "value"}`
               const itemConfig = item.dataKey ? config[item.dataKey] : undefined
               const indicatorColor = itemConfig?.color || config.colors?.[key] || item.color
@@ -184,7 +189,7 @@ const ChartTooltipContent = React.forwardRef<
                   )}
                   <span className="font-medium text-foreground">
                     {itemConfig?.format
-                      ? itemConfig.format(item.value)
+                      ? itemConfig.format(item.value as number) // Cast to number for format
                       : item.value}
                   </span>
                 </div>
@@ -204,7 +209,7 @@ const ChartLegend = RechartsPrimitive.Legend
 
 type ChartLegendContentProps = React.ComponentPropsWithoutRef<
   typeof RechartsPrimitive.Legend
-> & {
+> & React.HTMLAttributes<HTMLDivElement> & { // Extend HTMLDivElement attributes
   hideIndicator?: boolean
   nameKey?: string
 }
@@ -214,7 +219,7 @@ const ChartLegendContent = React.forwardRef<
   ChartLegendContentProps
 >(
   (
-    { className, hideIndicator = false, payload, nameKey, ...props },
+    { className, hideIndicator = false, payload, nameKey, ...props }, // Rest props for the div
     ref
   ) => {
     const { config } = useChart()
@@ -228,16 +233,16 @@ const ChartLegendContent = React.forwardRef<
           "flex flex-wrap items-center justify-center gap-4",
           className
         )}
-        {...props}
+        {...props} // Pass rest props to the div
       >
-        {payload.map((item: { value?: string; dataKey?: string; color?: string }) => { // Explicitly type item
+        {payload.map((item: Payload<any, any>) => { // Use Recharts Payload type
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = item.dataKey ? config[item.dataKey] : undefined
           const indicatorColor = item.color || itemConfig?.color || config.colors?.[key]
 
           return (
             <div
-              key={item.value}
+              key={item.value as string} // Cast to string for key
               className="flex items-center gap-1.5"
             >
               {hideIndicator ? null : (

@@ -546,3 +546,55 @@ INFO: Connected to new websocket client
 [debug] [2025-09-29T20:32:39.364Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/webhooks.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/webhooks.ts changed, reloading triggers"}}
 [debug] [2025-09-29T20:32:39.365Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/reportPlayBatch.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/reportPlayBatch.ts changed, reloading triggers"}}
 [debug] [2025-09-29T20:32:39.365Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/connect.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/connect.ts changed, reloading triggers"}}
+[debug] [2025-09-29T20:32:40.370Z] Validating nodejs source
+[warn] ⚠  functions: Couldn't find firebase-functions package in your source code. Have you run 'npm install'? 
+[debug] [2025-09-29T20:32:40.373Z] getFunctionsSDKVersion encountered error: Cannot find module '/Users/freedash99/dyad-apps/HUMANE/functions/node_modules/firebase-functions/lib/v2/index.js' {"code":"MODULE_NOT_FOUND","path":"/Users/freedash99/dyad-apps/HUMANE/functions/node_modules/firebase-functions/package.json"}
+[debug] [2025-09-29T20:32:40.375Z] checkFunctionsSDKVersion encountered error: Invalid Version:  {}
+[debug] [2025-09-29T20:32:40.376Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "HUMANE Firebase Functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.1",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^17.1.0",
+    "zod": "^3.25.28",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "typescript": "^5.0.0",
+    "@types/cors": "^2.8.17"
+  },
+  "private": true
+}
+[debug] [2025-09-29T20:32:40.376Z] Building nodejs source
+[debug] [2025-09-29T20:32:40.376Z] Failed to find version of module node: reached end of search path /Users/freedash99/dyad-apps/HUMANE/functions/node_modules
+[info] ✔  functions: Using node@18 from host. 
+[debug] [2025-09-29T20:32:40.377Z] Could not parse firebase-functions version '' into semver. Falling back to parseTriggers.
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Error parsing triggers: Cannot find module './ping'
+Require stack:
+- /Users/freedash99/dyad-apps/HUMANE/functions/lib/index.js
+- /Users/freedash99/.nvm/versions/node/v18.20.8/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/triggerParser.js
+
+Try running "npm install" in your functions directory before deploying. {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Error parsing triggers: Cannot find module './ping'\nRequire stack:\n- /Users/freedash99/dyad-apps/HUMANE/functions/lib/index.js\n- /Users/freedash99/.nvm/versions/node/v18.20.8/lib/node_modules/firebase-tools/lib/deploy/functions/runtimes/node/triggerParser.js\n\nTry running \"npm install\" in your functions directory before deploying."}}
+[debug] [2025-09-29T20:37:04.135Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/webhooks.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/webhooks.ts changed, reloading triggers"}}
+[debug] [2025-09-29T20:37:04.137Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/reportPlayBatch.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/reportPlayBatch.ts changed, reloading triggers"}}
+[debug] [2025-09-29T20:37:04.137Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/connect.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/connect.ts changed, reloading triggers"}}
+[debug] [2025-09-29T20:37:04.137Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/materializeRaw.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/materializeRaw.ts changed, reloading triggers"}}

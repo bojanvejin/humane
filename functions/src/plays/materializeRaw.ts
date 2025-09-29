@@ -1,16 +1,16 @@
 import * as admin from 'firebase-admin';
-import { onDocumentCreated, DocumentSnapshot } from 'firebase-functions/v2/firestore'; // Import DocumentSnapshot
+import { onDocumentCreated, FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore'; // Import FirestoreEvent and QueryDocumentSnapshot
 import { Play, Track, UserTrackAggregate, FraudReason } from '../types';
 import { detectSuspiciousPlay } from '../utils/fraudDetection';
 
-export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event: DocumentSnapshot) => {
+export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event: FirestoreEvent<QueryDocumentSnapshot | undefined, { eventId: string; yyyymm: string; }>) => {
     // Get services from the default initialized app
     const app = admin.app();
     const db = app.firestore();
 
-    const rawPlay = event.data?.data();
-    const eventId = event.params.eventId;
-    const yyyymm = event.params.yyyymm;
+    const rawPlay = event.data?.data(); // Access data from event.data (QueryDocumentSnapshot)
+    const eventId = event.params.eventId; // Access params from event
+    const yyyymm = event.params.yyyymm; // Access params from event
 
     if (!rawPlay) {
         console.error(`No data found for event ${eventId} in plays_raw/${yyyymm}/events.`);

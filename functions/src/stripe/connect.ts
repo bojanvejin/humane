@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
-import { onCall, HttpsCallableRequest } from 'firebase-functions/v2/https'; // Import HttpsCallableRequest
+import { onCall, CallableRequest } from 'firebase-functions/v2/https'; // Changed HttpsCallableRequest to CallableRequest
 
-export const createStripeConnectAccount = onCall(async (request: HttpsCallableRequest) => {
+export const createStripeConnectAccount = onCall(async (request: CallableRequest) => {
   // Get services from the default initialized app
   const app = admin.app();
   const db = app.firestore();
