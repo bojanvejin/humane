@@ -77,6 +77,11 @@ const Chart: React.FC<ChartProps> = ({
       }
       const dataKey = safeToString(initialDataKey); // Use safeToString
 
+      const { format } = config[dataKey] || {};
+      const value = item.value;
+      // Apply safeToString here as well, and check type before calling format
+      const formattedValue = format && typeof value === 'number' ? format(value) : safeToString(value);
+
       return (
         <div className="rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
           <p className="text-sm font-medium">{safeToString(props.label)}</p> {/* Use safeToString for label */}
@@ -90,7 +95,10 @@ const Chart: React.FC<ChartProps> = ({
             const itemConfig = config[key];
             if (!itemConfig) return null;
 
-            const itemValue = itemConfig.format ? itemConfig.format(payloadItem.value as number) : payloadItem.value;
+            // Apply safeToString here, and check type before calling format
+            const itemValue = itemConfig.format && typeof payloadItem.value === 'number'
+              ? itemConfig.format(payloadItem.value)
+              : safeToString(payloadItem.value);
 
             return (
               <div key={`item-${index}`} className="flex items-center justify-between gap-2 text-sm">
