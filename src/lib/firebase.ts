@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck } from 'firebase/app-check'; // Added App Check imports
+import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck } from '@firebase/app-check'; // Corrected import for getAppCheck
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
