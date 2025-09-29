@@ -120,7 +120,13 @@ const Chart: React.FC<ChartProps> = ({
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+        <XAxis 
+          dataKey="name" 
+          stroke="hsl(var(--muted-foreground))" 
+          tickLine={false} 
+          axisLine={false} 
+          tickFormatter={(value) => safeToString(value)} // Added tickFormatter here
+        />
         <YAxis stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
         <Tooltip content={renderTooltipContent} cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeDasharray: '3 3' }} />
         <Legend />
