@@ -1,8 +1,8 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import cors from 'cors'; // Corrected: default import for cors
-import { hashIpAddress } from '../utils/security'; // Import from new internal utility
+import * as cors from 'cors'; // Changed to namespace import for type resolution
+import { hashIpAddress } from '../utils/security';
 import { FraudReason } from '../types';
 
 const db = admin.firestore();
@@ -181,20 +181,6 @@ export function detectSuspiciousPlay(play: PlayEventDataForDetection): { isSuspi
     reasons.push('bot_user_agent');
     isSuspicious = true;
   }
-
-  // Rule 3: Local IP address detection (hashed IP will be consistent for local)
-  // Note: This check is less effective with hashed IPs unless you hash known local IPs.
-  // For now, we'll assume '127.0.0.1' or '::1' would be hashed to specific values if they were the source.
-  // A more robust check would be to check the *unhashed* IP before hashing, or hash known local IPs for comparison.
-  // For MVP, we'll keep it simple and rely on the client-side IP being '0.0.0.0' for local dev.
-  // If the client-side IP is '0.0.0.0', the hashed IP will be consistent.
-  // This rule is primarily for *unhashed* IPs, but keeping it for conceptual consistency.
-  // A better approach for production would be to check the raw clientIp before hashing.
-  // For now, if the client sends '0.0.0.0' and it gets hashed, this rule won't trigger unless
-  // the hashed value of '0.0.0.0' is explicitly checked.
-  // Let's remove the local IP check here for now, as it's better handled with the raw IP.
-  // The instruction was to hash IP on the server, so the raw IP is not available here.
-  // This rule will be re-evaluated if raw IP is needed for detection.
 
   if (isSuspicious) {
     fraudScore = 1;

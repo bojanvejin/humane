@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
-import cors from 'cors'; // Corrected: default import for cors
+import * as cors from 'cors'; // Changed to namespace import for type resolution
 
 const db = admin.firestore();
 const corsHandler = cors({ origin: true });

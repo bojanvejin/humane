@@ -628,3 +628,67 @@ INFO: Connected to new websocket client
 [debug] [2025-09-29T19:51:08.480Z] Got response code 400; body Failed to generate manifest from function source: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
 [error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
 [debug] [2025-09-29T19:54:03.950Z] File /Users/freedash99/dyad-apps/HUMANE/functions/tsconfig.json changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/tsconfig.json changed, reloading triggers"}}
+[debug] [2025-09-29T19:54:04.955Z] Validating nodejs source
+[debug] [2025-09-29T19:54:05.706Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "HUMANE Firebase Functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.1",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^17.1.0",
+    "zod": "^3.25.28",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "typescript": "^5.0.0",
+    "@types/cors": "^2.8.17"
+  },
+  "private": true
+}
+[debug] [2025-09-29T19:54:05.706Z] Building nodejs source
+[debug] [2025-09-29T19:54:05.706Z] Failed to find version of module node: reached end of search path /Users/freedash99/dyad-apps/HUMANE/functions/node_modules
+[info] ✔  functions: Using node@18 from host. 
+[debug] [2025-09-29T19:54:05.707Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-09-29T19:54:05.709Z] Found firebase-functions binary at '/Users/freedash99/dyad-apps/HUMANE/node_modules/.bin/firebase-functions'
+[info] Serving at port 8282
+
+[error] FirebaseAppError: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+    at AppStore.getApp (/Users/freedash99/dyad-apps/HUMANE/node_modules/.pnpm/firebase-admin@13.5.0/node_modules/firebase-admin/lib/app/lifecycle.js:79:19)
+    at FirebaseNamespaceInternals.app (/Users/freedash99/dyad-apps/HUMANE/node_modules/.pnpm/firebase-admin@13.5.0/node_modules/firebase-admin/lib/app/firebase-namespace.js:54:35)
+    at FirebaseNamespace.app (/Users/freedash99/dyad-apps/HUMANE/node_modules/.pnpm/firebase-admin@13.5.0/node_modules/firebase-admin/lib/app/firebase-namespace.js:256:30)
+    at FirebaseNamespace.ensureApp (/Users/freedash99/dyad-apps/HUMANE/node_modules/.pnpm/firebase-admin@13.5.0/node_modules/firebase-admin/lib/app/firebase-namespace.js:266:24)
+    at FirebaseNamespace.fn (/Users/freedash99/dyad-apps/HUMANE/node_modules/.pnpm/firebase-admin@13.5.0/node_modules/firebase-admin/lib/app/firebase-namespace.js:136:25)
+    at Object.<anonymous> (/Users/freedash99/dyad-apps/HUMANE/functions/lib/plays/reportPlayBatch.js:43:18)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12) {
+  errorInfo: {
+    code: 'app/no-app',
+    message: 'The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.'
+  },
+  codePrefix: 'app'
+}
+
+[debug] [2025-09-29T19:54:06.069Z] Got response code 400; body Failed to generate manifest from function source: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
+[debug] [2025-09-29T19:54:42.715Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/reportPlayBatch.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/plays/reportPlayBatch.ts changed, reloading triggers"}}
+[debug] [2025-09-29T19:54:42.716Z] File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/webhooks.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File /Users/freedash99/dyad-apps/HUMANE/functions/src/stripe/webhooks.ts changed, reloading triggers"}}
