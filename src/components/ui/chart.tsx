@@ -13,7 +13,9 @@ import {
 } from 'recharts';
 
 // Define Payload type from TooltipProps, using 'any' for generics to simplify
-type PayloadItem = TooltipProps<any, any>['payload'][number];
+// This correctly extracts the type of an element in the 'payload' array,
+// even if 'payload' itself is optional or undefined.
+type PayloadItem = TooltipProps<any, any>['payload'] extends (infer U)[] ? U : never;
 
 interface ChartConfig {
   [key: string]: {
