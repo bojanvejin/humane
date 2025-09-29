@@ -4,8 +4,9 @@ import { Play, Track, UserTrackAggregate, FraudReason } from '../types';
 import { detectSuspiciousPlay } from './reportPlayBatch';
 
 export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event) => {
-    // Initialize services inside the function to ensure admin.initializeApp() has run
-    const db = admin.firestore();
+    // Get services from the default initialized app
+    const app = admin.app();
+    const db = app.firestore();
 
     const rawPlay = event.data?.data();
     const eventId = event.params.eventId;

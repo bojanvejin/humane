@@ -2,8 +2,9 @@ import * as admin from 'firebase-admin';
 // import { onSchedule } from 'firebase-functions/v2/scheduler'; // Uncomment when ready for v2 schedule
 
 export const calculateUCPSPayouts = async () => {
-  // Initialize services inside the function to ensure admin.initializeApp() has run
-  const db = admin.firestore();
+  // Get services from the default initialized app
+  const app = admin.app();
+  const db = app.firestore();
 
   console.log('calculateUCPSPayouts function called (placeholder).');
   // TODO: Implement UCPS calculation logic here

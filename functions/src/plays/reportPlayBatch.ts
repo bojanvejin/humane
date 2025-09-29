@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import * as cors from 'cors'; // Corrected to import * as cors
+import * as cors from 'cors';
 import { hashIpAddress } from '../utils/security';
 import { FraudReason } from '../types';
 
@@ -21,7 +21,6 @@ const PlayEventSchema = z.object({
   completed: z.boolean(),
   deviceInfo: z.object({
     userAgent: z.string(),
-    // ipAddress will be determined server-side
     country: z.string().optional(),
   }),
   timestamp: z.string().datetime(),
@@ -33,12 +32,13 @@ const PlayBatchPayloadSchema = z.object({
 });
 
 export const reportPlayBatch = onRequest(async (req, res) => {
-  // Initialize services inside the function to ensure admin.initializeApp() has run
-  const db = admin.firestore();
-  const auth = admin.auth();
-  const appCheck = admin.appCheck();
-
   corsHandler(req, res, async () => {
+    // Get services from the default initialized app
+    const app = admin.app();
+    const db = app.firestore();
+    const auth = app.auth();
+    const appCheck = app.appCheck();
+
     if (req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
     }
