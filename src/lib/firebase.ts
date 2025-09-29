@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck, AppCheck } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider, AppCheck } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -16,19 +16,17 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase app, ensuring it's only initialized once
 export const app = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig);
 
-// Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 
-// Initialize App Check in the browser only (and only once)
 declare global {
-  // allow dev debug token usage
-  interface Window { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string }
+  interface Window {
+    FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;
+  }
 }
 
 let appCheckInstance: AppCheck | undefined;
@@ -37,24 +35,19 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
   if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
     window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
-  
-  // Check if App Check is already initialized for this app instance
-  // initializeAppCheck will throw if called more than once for the same app.
-  // We can safely call it once and then retrieve the instance.
+
   try {
-    appCheckInstance = getAppCheck(app); // Try to get an existing instance
-  } catch (e) {
-    // If it throws, it means it's not initialized, so initialize it
     appCheckInstance = initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
       isTokenAutoRefreshEnabled: true,
     });
+  } catch (e: any) {
+    console.warn('Firebase App Check initialization failed, likely already initialized or an environment issue:', e);
   }
 }
 
-export const appCheck = appCheckInstance; // Export the initialized appCheck instance
+export const appCheck = appCheckInstance;
 
-// Initialize Analytics only if supported (client-side)
-export const analyticsPromise = isSupported().then((ok) => ok ? getAnalytics(app) : null);
+export const analyticsPromise = isSupported().then((ok) => (ok ? getAnalytics(app) : null));
 
 export default app;
