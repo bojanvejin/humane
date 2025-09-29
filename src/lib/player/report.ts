@@ -1,7 +1,7 @@
 import { getAuth } from 'firebase/auth';
-import app from '@/lib/firebase';
+import app, { appCheck } from '@/lib/firebase'; // Import appCheck from firebase.ts
 import { generateUuid } from '@/lib/utils/security';
-import { getAppCheck, getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected imports
+import { getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected imports
 
 // Define the endpoint for the Cloud Function
 // For local emulators, this URL needs to be specific to the v2 onRequest function.
@@ -36,9 +36,12 @@ export async function reportPlayBatchToFunction(plays: Omit<PlayEventPayload, 'e
   // Get App Check token from the initialized App Check instance
   let appCheckToken: string | undefined;
   try {
-    const appCheckInstance = getAppCheck(app); // Get the App Check instance
-    const tokenResult = await getAppCheckToken(appCheckInstance);
-    appCheckToken = tokenResult.token;
+    if (appCheck) { // Use the globally exported appCheck instance
+      const tokenResult = await getAppCheckToken(appCheck);
+      appCheckToken = tokenResult.token;
+    } else {
+      console.warn('App Check is not initialized. Proceeding without App Check token.');
+    }
   } catch (error) {
     console.error('Error getting App Check token:', error);
     // Depending on your App Check enforcement, you might want to throw here
