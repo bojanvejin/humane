@@ -14,7 +14,7 @@ import {
 
 // Explicitly define PayloadItem based on common Recharts payload structure
 interface PayloadItem {
-  value: any;
+  value?: any; // Made optional to match Recharts' Payload type
   name?: string;
   unit?: string;
   dataKey: string | number;
