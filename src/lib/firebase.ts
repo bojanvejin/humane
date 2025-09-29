@@ -1,4 +1,4 @@
-import { initializeApp, getApps, FirebaseApp, FirebaseOptions } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
@@ -26,7 +26,7 @@ if (missingConfig.length > 0) {
 }
 
 // Cast to FirebaseOptions directly
-export const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig as FirebaseOptions);
+export const app = getApps().length ? getApp() : initializeApp(firebaseConfig as FirebaseOptions);
 
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
@@ -43,12 +43,13 @@ let appCheckInstance: AppCheck | undefined;
 
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
   if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
-    window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    // @ts-ignore
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
 
   try {
     appCheckInstance = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
       isTokenAutoRefreshEnabled: true,
     });
   } catch (e: any) {

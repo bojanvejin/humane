@@ -4,9 +4,11 @@ import { generateUuid } from '@/lib/utils/security';
 import { getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected imports
 
 // Define the endpoint for the Cloud Function
-// For local emulators, this URL needs to be specific to the v2 onRequest function.
-// The project ID 'humane-io' is hardcoded here for emulator testing.
-const REPORT_PLAY_BATCH_ENDPOINT = 'http://localhost:5001/humane-io/us-central1/reportPlayBatch'; 
+const REPORT_PLAY_BATCH_ENDPOINT =
+  process.env.NEXT_PUBLIC_REPORT_PLAY_BATCH_URL ??
+  (process.env.NEXT_PUBLIC_USE_EMULATORS === 'true'
+    ? 'http://127.0.0.1:5002/humane-io/us-central1/reportPlayBatch'
+    : 'https://us-central1-humane-io.cloudfunctions.net/reportPlayBatch');
 
 interface PlayEventPayload {
   eventId: string; // Client-generated UUID for this specific event

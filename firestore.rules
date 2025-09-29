@@ -1,38 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    function authed() { return request.auth != null; }
-    function has(role) { return authed() && role in request.auth.token.roles; }
 
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.role == 'admin'; }
+    function isArtist(uid) { return isSignedIn() && request.auth.uid == uid && request.auth.token.role == 'artist'; }
+
+    match /tracks/{trackId} {
+      allow read: if true;
+      allow write: if isAdmin() || (isArtist(request.auth.uid) && request.resource.data.artistId == request.auth.uid);
+    }
+
+    match /plays_raw/{id} {
+      allow read: if isAdmin();
+      allow write: if false; // only via server
+    }
+
+    match /plays/{id} {
+      allow read: if isSignedIn();
+      allow write: if false; // only materializer
+    }
+    
+    // Allow users to read their own user profile
     match /users/{uid} {
-      allow read: if authed() && (request.auth.uid == uid || has('admin'));
-      allow write: if request.auth.uid == uid;
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    match /artists/{id} {
-      allow read: if true; // public
-      allow create, update: if has('artist') && request.auth.uid == resource.data.ownerUserId;
+    // Allow artists to read their own artist profile
+    match /artistProfiles/{artistId} {
+      allow read: if true; // Publicly readable artist profiles
+      allow write: if isArtist(request.auth.uid) && request.resource.data.userId == request.auth.uid;
     }
 
-    match /plays/{id} { // Changed from {period}/{id} to just {id} as materializeRaw now uses eventId as doc ID
-      allow read: if has('admin');
-      allow write: if false; // server-only via CF
-    }
-
-    match /plays_raw/{yyyymm}/events/{eventId} { // Updated path
-      allow read: if has('admin');
-      // Allow write only from authenticated Cloud Functions (server-side)
-      // This rule assumes that the `reportPlayBatch` function will be authenticated
-      // as a service account, or that the `request.auth` context for functions
-      // is handled appropriately. For now, we'll allow authenticated users to write
-      // to plays_raw, but the `reportPlayBatch` function will enforce stricter checks.
-      // The `materializeRaw` function will then move it to `/plays`.
-      allow write: if authed(); 
-    }
-
-    match /userTrackAgg/{id} {
-      allow read: if has('admin'); // Only admins can read aggregates directly
-      allow write: if false; // Server-only via CF (materializeRaw)
+    // Deny all other writes by default
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
