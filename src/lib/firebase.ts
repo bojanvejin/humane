@@ -41,19 +41,23 @@ declare global {
 
 let appCheckInstance: AppCheck | undefined;
 
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
-  if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
-    // @ts-ignore
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  }
+if (typeof window !== 'undefined') {
+  if (!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+    console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set. Firebase App Check will not be initialized.');
+  } else {
+    if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
+      // @ts-ignore
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
 
-  try {
-    appCheckInstance = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
-      isTokenAutoRefreshEnabled: true,
-    });
-  } catch (e: any) {
-    console.warn('Firebase App Check initialization failed, likely already initialized or an environment issue:', e);
+    try {
+      appCheckInstance = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } catch (e: any) {
+      console.warn('Firebase App Check initialization failed, likely already initialized or an environment issue:', e);
+    }
   }
 }
 
