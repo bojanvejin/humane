@@ -4,17 +4,28 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
+// Helper function to get environment variables with a check
+function getEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value || value.trim() === '') {
+    throw new Error(`Missing required environment variable: ${name}. Please check your .env.local file.`);
+  }
+  return value;
+}
+
+const firebaseConfig = {
+  apiKey: getEnvVar('NEXT_PUBLIC_FIREBASE_API_KEY'),
+  authDomain: getEnvVar('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+  projectId: getEnvVar('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+  storageBucket: getEnvVar('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+  appId: getEnvVar('NEXT_PUBLIC_FIREBASE_APP_ID'),
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, // Optional, so no strict check
+};
+
 const app =
   getApps().length
     ? getApp()
-    : initializeApp({
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-        // measurementId optional
-      });
+    : initializeApp(firebaseConfig);
 
 // ── App Check (browser only) ───────────────────────────────────────────────────
 declare global {
