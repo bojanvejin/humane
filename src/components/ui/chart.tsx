@@ -14,10 +14,10 @@ import {
 
 // Explicitly define PayloadItem based on common Recharts payload structure
 interface PayloadItem {
-  value?: any; // Made optional to match Recharts' Payload type
+  value?: any;
   name?: string;
-  unit?: React.ReactNode; // Updated to React.ReactNode | undefined to match Recharts' Payload type
-  dataKey: string | number;
+  unit?: React.ReactNode;
+  dataKey?: string | number; // Updated to be optional
   color?: string;
   fill?: string;
   stroke?: string;
