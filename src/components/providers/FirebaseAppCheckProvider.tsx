@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { getToken } from '@firebase/app-check'; // Corrected: getToken is from @firebase/app-check
-import { getAppCheck } from 'firebase/app'; // Corrected import for getAppCheck
+import { getAppCheck } from '@firebase/app-check'; // Corrected import for getAppCheck
 import app from '@/lib/firebase'; // Corrected import for 'app'
 
 interface AppCheckContextType {
