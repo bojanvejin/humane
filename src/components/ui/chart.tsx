@@ -8,20 +8,22 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  type Payload,
   type LegendType,
+  type TooltipProps, // Import TooltipProps
 } from 'recharts';
 // Removed @mui/material imports as per AI_RULES.md
 // import { Box, Typography } from '@mui/material'; 
+
+// Define Payload type from TooltipProps
+type Payload<TValue, TName> = TooltipProps<TValue, TName>['payload'][number];
 
 interface ChartConfig {
   [key: string]: {
     label?: string;
     color?: string;
-    icon?: ComponentType<{ className?: string }>;
+    icon?: ComponentType<{ className?: string; color?: string }>; // Added color prop to icon type
     format?: (value: number) => string;
   };
-  // Removed tooltip property as it conflicts with string index signature
 }
 
 interface ChartProps {
@@ -65,7 +67,7 @@ const Chart: React.FC<ChartProps> = ({
             return (
               <div key={`item-${index}`} className="flex items-center justify-between gap-2 text-sm">
                 <div className="flex items-center gap-1">
-                  {itemConfig.icon && <itemConfig.icon className="h-3 w-3" style={{ color: itemConfig.color }} />}
+                  {itemConfig.icon && <itemConfig.icon className="h-3 w-3" color={itemConfig.color} />}
                   <span className="text-muted-foreground">{itemConfig.label || key}:</span>
                 </div>
                 <span className="font-semibold" style={{ color: itemConfig.color }}>{itemValue}</span>
@@ -84,7 +86,7 @@ const Chart: React.FC<ChartProps> = ({
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
         <YAxis stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
-        <Tooltip content={config.tooltip?.render || renderTooltipContent} cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeDasharray: '3 3' }} />
+        <Tooltip content={renderTooltipContent} cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeDasharray: '3 3' }} />
         <Legend />
         {Object.entries(config).map(([key, seriesConfig]) => (
           <Line

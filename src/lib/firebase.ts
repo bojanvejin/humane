@@ -1,4 +1,4 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp, FirebaseOptions } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
@@ -25,8 +25,8 @@ if (missingConfig.length > 0) {
   throw new Error(errorMessage);
 }
 
-// Cast to a type that allows undefined for measurementId, as initializeApp accepts it.
-export const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig as Parameters<typeof initializeApp>[0]);
+// Cast to FirebaseOptions directly
+export const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig as FirebaseOptions);
 
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
