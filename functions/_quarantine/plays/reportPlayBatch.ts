@@ -1,8 +1,8 @@
+import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { onRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import * as cors from 'cors';
-import { hashIpAddress } from '../utils/security'; // Import from new internal utility
+import { hashIpAddress, generateUuid } from '../../../src/lib/utils/security'; // Adjust path as needed
 import { FraudReason } from '../types';
 
 const db = admin.firestore();
@@ -16,7 +16,6 @@ const IP_HASH_SALT = process.env.IP_HASH_SALT || 'super-secret-ip-hash-salt-repl
 
 // Validation schema for a single play event
 const PlayEventSchema = z.object({
-  eventId: z.string().uuid(), // Client-generated UUID for this specific event
   trackId: z.string(),
   sessionId: z.string().uuid(), // Client-generated UUID for session
   duration: z.number().min(0), // Duration of the actual listen in ms
@@ -35,7 +34,7 @@ const PlayBatchPayloadSchema = z.object({
   plays: z.array(PlayEventSchema).max(1000), // Limit batch size
 });
 
-export const reportPlayBatch = onRequest(async (req, res) => {
+export const reportPlayBatch = functions.https.onRequest(async (req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
@@ -81,16 +80,10 @@ export const reportPlayBatch = onRequest(async (req, res) => {
       const suspiciousPlayIds: string[] = [];
 
       for (const play of validatedData.plays) {
-        // Ensure the userId in the play events matches the authenticated user's UID
-        // This prevents users from reporting plays for other users.
-        // Note: The PlayEventSchema doesn't include userId, so we'll add it here.
-        // If userId was part of the client-sent payload, it would be validated against authenticatedUserId.
-        // For now, we assume the client doesn't send userId and it's assigned server-side.
-
-        const currentTimestamp = new Date(play.timestamp);
-        const yyyymm = currentTimestamp.toISOString().substring(0, 7).replace('-', ''); // e.g., '202407'
-        
-        const playRef = db.collection('plays_raw').doc(yyyymm).collection('events').doc(play.eventId);
+        // Generate a unique playId for idempotency
+        // Using sessionId (client-generated UUID) + trackId + timestamp for uniqueness
+        const playId = `${play.sessionId}_${play.trackId}_${new Date(play.timestamp).getTime()}`;
+        const playRef = db.collection('plays_raw').doc(playId);
         
         // Fraud detection rules (initial checks)
         const { isSuspicious, reasons, fraudScore } = detectSuspiciousPlay({
@@ -103,11 +96,12 @@ export const reportPlayBatch = onRequest(async (req, res) => {
         });
 
         if (isSuspicious) {
-          suspiciousPlayIds.push(play.eventId);
+          suspiciousPlayIds.push(playId);
         }
 
         const playData = {
           ...play,
+          id: playId,
           userId: authenticatedUserId, // Assign authenticated user ID
           deviceInfo: {
             ...play.deviceInfo,
@@ -125,7 +119,7 @@ export const reportPlayBatch = onRequest(async (req, res) => {
         // However, Firestore's batch.set() with merge:false will overwrite if it exists.
         // For true idempotency at the Firestore level for *new* documents,
         // we'd need to check existence first or use a transaction.
-        // For now, the unique eventId should prevent most duplicates.
+        // For now, the unique playId should prevent most duplicates.
         batch.set(playRef, playData, { merge: false });
       }
 

@@ -14,12 +14,12 @@ service cloud.firestore {
       allow create, update: if has('artist') && request.auth.uid == resource.data.ownerUserId;
     }
 
-    match /plays/{period}/{id} {
+    match /plays/{id} { // Changed from {period}/{id} to just {id} as materializeRaw now uses eventId as doc ID
       allow read: if has('admin');
       allow write: if false; // server-only via CF
     }
 
-    match /plays_raw/{period}/{id} {
+    match /plays_raw/{yyyymm}/events/{eventId} { // Updated path
       allow read: if has('admin');
       // Allow write only from authenticated Cloud Functions (server-side)
       // This rule assumes that the `reportPlayBatch` function will be authenticated

@@ -1,25 +1,29 @@
 import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase'; // Assuming firebase.ts exports 'app'
 import { generateUuid } from '@/lib/utils/security'; // Import generateUuid
+import { getToken as getAppCheckToken } from '@firebase/app-check'; // Import App Check getToken
+import { useAppCheckContext } from '@/components/providers/FirebaseAppCheckProvider'; // Assuming this context is available
 
 // Define the endpoint for the Cloud Function
-const REPORT_PLAY_BATCH_ENDPOINT = 'http://localhost:5001/humane-io/us-central1/reportPlayBatch'; // Adjust for production
+// For local emulators, this URL needs to be specific to the v2 onRequest function.
+// The project ID 'humane-io' is hardcoded here for emulator testing.
+const REPORT_PLAY_BATCH_ENDPOINT = 'http://localhost:5001/humane-io/us-central1/reportPlayBatch'; 
 
-interface PlayEvent {
+interface PlayEventPayload {
+  eventId: string; // Client-generated UUID for this specific event
   trackId: string;
-  sessionId: string; // Client-generated UUID
+  sessionId: string; // Client-generated UUID for session
   duration: number; // ms played
   trackFullDurationMs: number; // full duration of the track in ms
   completed: boolean;
   deviceInfo: {
     userAgent: string;
-    // ipAddress is determined server-side
     country?: string;
   };
   timestamp: string; // ISO string
 }
 
-export async function reportPlayBatchToFunction(plays: Omit<PlayEvent, 'sessionId'>[]) {
+export async function reportPlayBatchToFunction(plays: Omit<PlayEventPayload, 'eventId' | 'sessionId'>[]) {
   const auth = getAuth(app);
   const currentUser = auth.currentUser;
 
@@ -29,14 +33,26 @@ export async function reportPlayBatchToFunction(plays: Omit<PlayEvent, 'sessionI
   }
 
   const idToken = await currentUser.getIdToken();
-  const appCheckToken = await getAppCheckToken(); // Get App Check token
+  
+  // Get App Check token from the initialized App Check instance
+  let appCheckToken: string | undefined;
+  try {
+    const appCheck = (await import('@firebase/app-check')).getAppCheck(app);
+    const tokenResult = await getAppCheckToken(appCheck);
+    appCheckToken = tokenResult.token;
+  } catch (error) {
+    console.error('Error getting App Check token:', error);
+    // Depending on your App Check enforcement, you might want to throw here
+    // or proceed without the token (if in debug mode or non-critical path).
+  }
 
-  // Generate a single sessionId for the entire batch if not already present in individual plays
+  // Generate a single sessionId for the entire batch
   const batchSessionId = generateUuid();
 
-  const playsWithSessionId: PlayEvent[] = plays.map(play => ({
+  const playsWithIds: PlayEventPayload[] = plays.map(play => ({
     ...play,
-    sessionId: batchSessionId, // Assign the generated session ID
+    eventId: generateUuid(), // Generate a unique eventId for each play in the batch
+    sessionId: batchSessionId, // Assign the generated session ID to all plays in the batch
   }));
 
   try {
@@ -47,7 +63,7 @@ export async function reportPlayBatchToFunction(plays: Omit<PlayEvent, 'sessionI
         'Authorization': `Bearer ${idToken}`,
         'X-Firebase-AppCheck': appCheckToken || '', // Include App Check token
       },
-      body: JSON.stringify({ plays: playsWithSessionId }),
+      body: JSON.stringify({ plays: playsWithIds }),
     });
 
     if (!response.ok) {
@@ -71,13 +87,4 @@ export function getDeviceInfo() {
     userAgent: navigator.userAgent,
     country: undefined, // Can be determined via IP lookup server-side
   };
-}
-
-// Placeholder for App Check token retrieval
-// This will be properly implemented with Firebase App Check SDK
-async function getAppCheckToken(): Promise<string | undefined> {
-  // TODO: Implement actual App Check token retrieval using firebase/app-check
-  // For now, return a placeholder or undefined
-  console.warn('App Check token retrieval not fully implemented. Returning placeholder.');
-  return 'fake-app-check-token'; 
 }

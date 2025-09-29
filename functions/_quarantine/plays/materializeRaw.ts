@@ -1,23 +1,19 @@
+import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { Play, Track, UserTrackAggregate, FraudReason } from '../types'; // Corrected import path
+import { Play, Track, UserTrackAggregate, FraudReason } from '../types'; // Assuming types are accessible
 import { detectSuspiciousPlay } from './reportPlayBatch'; // Re-use basic detection
 
 const db = admin.firestore();
 
-export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event) => {
-    const rawPlay = event.data?.data();
-    const eventId = event.params.eventId;
-    const yyyymm = event.params.yyyymm;
-
-    if (!rawPlay) {
-        console.error(`No data found for event ${eventId} in plays_raw/${yyyymm}/events.`);
-        return null;
-    }
+export const materializeRaw = functions.firestore
+  .document('plays_raw/{playId}')
+  .onCreate(async (snapshot, context) => {
+    const rawPlay = snapshot.data();
+    const playId = snapshot.id;
 
     // Prevent re-processing if already marked as processed (e.g., by another instance)
     if (rawPlay.processed) {
-      console.log(`Raw play ${eventId} already processed. Skipping.`);
+      console.log(`Raw play ${playId} already processed. Skipping.`);
       return null;
     }
 
@@ -25,8 +21,8 @@ export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{even
       // Fetch actual track duration from Firestore
       const trackDoc = await db.collection('tracks').doc(rawPlay.trackId).get();
       if (!trackDoc.exists) {
-        console.warn(`Track ${rawPlay.trackId} not found for raw play ${eventId}. Marking as suspicious.`);
-        await db.collection('plays_raw').doc(yyyymm).collection('events').doc(eventId).update({
+        console.warn(`Track ${rawPlay.trackId} not found for raw play ${playId}. Marking as suspicious.`);
+        await snapshot.ref.update({
           suspicious: true,
           fraudReasons: admin.firestore.FieldValue.arrayUnion('track_not_found' as FraudReason),
           fraudScore: 1,
@@ -61,7 +57,7 @@ export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{even
         const windowEndsAt = aggData.windowEndsAt.toDate();
 
         if (currentPlayTimestamp.getTime() < windowEndsAt.getTime()) {
-          console.log(`Raw play ${eventId} is a duplicate within dedupe window. Marking as suspicious.`);
+          console.log(`Raw play ${playId} is a duplicate within dedupe window. Marking as suspicious.`);
           finalSuspicious = true;
           finalFraudReasons.push('duplicate_play_within_window');
           finalFraudScore = Math.max(finalFraudScore, 1);
@@ -70,7 +66,7 @@ export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{even
 
       // Materialize the play
       const materializedPlay: Play = {
-        id: eventId, // Use eventId as the materialized play ID
+        id: playId,
         trackId: rawPlay.trackId,
         userId: rawPlay.userId,
         sessionId: rawPlay.sessionId,
@@ -85,7 +81,7 @@ export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{even
 
       // Use a transaction to ensure atomicity for userTrackAgg update and play write
       await db.runTransaction(async (transaction) => {
-        transaction.set(db.collection('plays').doc(eventId), materializedPlay);
+        transaction.set(db.collection('plays').doc(playId), materializedPlay);
 
         // Update or create userTrackAgg
         const newWindowEndsAt = new Date(currentPlayTimestamp.getTime() + Math.max(30000, trackFullDurationMs / 4));
@@ -100,7 +96,7 @@ export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{even
       });
 
       // Mark raw play as processed
-      await db.collection('plays_raw').doc(yyyymm).collection('events').doc(eventId).update({
+      await snapshot.ref.update({
         processed: true,
         suspicious: finalSuspicious,
         fraudReasons: finalFraudReasons.length > 0 ? finalFraudReasons : admin.firestore.FieldValue.delete(),
@@ -108,12 +104,12 @@ export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{even
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      console.log(`Materialized play ${eventId} successfully.`);
+      console.log(`Materialized play ${playId} successfully.`);
       return null;
     } catch (error) {
-      console.error(`Error materializing raw play ${eventId}:`, error);
+      console.error(`Error materializing raw play ${playId}:`, error);
       // Mark raw play as processed but failed, to avoid re-triggering
-      await db.collection('plays_raw').doc(yyyymm).collection('events').doc(eventId).update({
+      await snapshot.ref.update({
         processed: true,
         materializationError: (error as Error).message,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
