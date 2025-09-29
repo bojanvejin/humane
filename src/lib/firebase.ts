@@ -13,7 +13,7 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || undefined, // Ensure it's undefined if not set
 };
 
 const requiredConfigKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
@@ -22,12 +22,11 @@ const missingConfig = requiredConfigKeys.filter(key => !firebaseConfig[key as ke
 if (missingConfig.length > 0) {
   const errorMessage = `Firebase initialization failed: Missing environment variables for: ${missingConfig.join(', ')}. Please ensure your .env.local file is correctly configured.`;
   console.error(errorMessage);
-  // Throwing an error here will prevent the app from starting if Firebase is misconfigured.
-  // This aligns with the AI_RULES.md to let errors bubble up.
   throw new Error(errorMessage);
 }
 
-export const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig as Record<string, string>);
+// Cast to a type that allows undefined for measurementId, as initializeApp accepts it.
+export const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig as Parameters<typeof initializeApp>[0]);
 
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
