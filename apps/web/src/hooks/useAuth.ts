@@ -10,7 +10,7 @@ import {
   updateProfile // Added this import
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@humane/lib/firebase';
 import { User } from '@/types';
 
 export const useAuth = () => {

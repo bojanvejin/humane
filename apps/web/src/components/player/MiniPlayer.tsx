@@ -6,7 +6,7 @@ import { Play, Pause, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { cn } from '@humane/lib/utils';
 
 const formatTime = (seconds: number | null | undefined) => {
   const safeSeconds = typeof seconds === 'number' && !isNaN(seconds) ? seconds : 0;

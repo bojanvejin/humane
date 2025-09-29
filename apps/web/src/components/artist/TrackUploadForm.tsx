@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { UploadCloud, FileAudio, XCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { app } from '@/lib/firebase'; // Import the Firebase app instance
+import { app } from '@humane/lib/firebase'; // Import the Firebase app instance
 
 const TrackUploadForm: React.FC = () => {
   const { firebaseUser, loading: authLoading } = useAuthContext();

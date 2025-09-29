@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Play, Pause, Loader2 } from 'lucide-react';
 import { usePlayer } from '@/components/player/PlayerProvider';
-import { cn } from '@/lib/utils';
+import { cn } from '@humane/lib/utils';
 
 interface TrackCardProps {
   track: PlayableTrack;
