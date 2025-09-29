@@ -3,9 +3,11 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types'; // Import User type
+import { User as FirebaseUser } from 'firebase/auth'; // Import FirebaseUser type
 
 interface AuthContextType {
   user: ReturnType<typeof useAuth>['user'];
+  firebaseUser: FirebaseUser | null; // Added firebaseUser here
   loading: boolean;
   loginWithEmail: (email: string, password: string) => Promise<any>;
   signupWithEmail: (email: string, password: string, displayName: string) => Promise<any>;

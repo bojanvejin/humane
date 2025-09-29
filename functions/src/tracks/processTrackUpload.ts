@@ -19,11 +19,8 @@ export const processTrackUpload = onObjectFinalized({ bucket: STORAGE_BUCKET_NAM
     return null;
   }
 
-  // Only process new files, not deletions or metadata updates
-  if (file.resourceState === 'not_exists') {
-    console.log(`File ${file.name} deleted, skipping processing.`);
-    return null;
-  }
+  // onObjectFinalized only triggers for new or overwritten objects, so resourceState check is not needed here.
+  // If you need to handle deletions, use onObjectDeleted.
 
   console.log(`Processing uploaded file: ${file.name} in bucket: ${file.bucket}`);
 
