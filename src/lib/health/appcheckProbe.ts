@@ -1,5 +1,10 @@
-import { getToken, AppCheckTokenResult } from 'firebase/app-check'; // Import AppCheckTokenResult
-import { appCheck } from '../firebase'; // Import appCheck instance
+import { getToken, AppCheckTokenResult } from 'firebase/app-check';
+import { appCheck } from '../firebase';
+
+// Extend the AppCheckTokenResult type to include expireTimeMillis
+interface ExtendedAppCheckTokenResult extends AppCheckTokenResult {
+  expireTimeMillis: number;
+}
 
 export async function appCheckHealth() {
   const key = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.trim();
@@ -8,8 +13,7 @@ export async function appCheckHealth() {
     if (!appCheck) {
       return { ok: false, error: 'App Check is not initialized.' };
     }
-    const tokenResult: AppCheckTokenResult = await getToken(appCheck, /* forceRefresh */ false);
-    // Accessing expireTimeMillis, which should be part of AppCheckTokenResult
+    const tokenResult = await getToken(appCheck, /* forceRefresh */ false) as ExtendedAppCheckTokenResult;
     const ttl = tokenResult.expireTimeMillis - Date.now(); // Calculate TTL
     return { ok: true, ttl: ttl };
   } catch (e) {
