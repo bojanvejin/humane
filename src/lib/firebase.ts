@@ -19,7 +19,7 @@ const app =
 // ── App Check (browser only) ───────────────────────────────────────────────────
 declare global {
   // eslint-disable-next-line no-var
-  var __appCheckInit?: boolean;
+  var __appCheckInit: boolean | undefined;
   // eslint-disable-next-line no-var
   var FIREBASE_APPCHECK_DEBUG_TOKEN: boolean | string | undefined;
 }
