@@ -1,83 +1,70 @@
-import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
-import { getFunctions, Functions } from 'firebase/functions';
-import { getAnalytics, Analytics, isSupported } from 'firebase/analytics';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider, AppCheck } from 'firebase/app-check';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || undefined, // Ensure it's undefined if not set
-};
+const app =
+  getApps().length
+    ? getApp()
+    : initializeApp({
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+        // measurementId optional
+      });
 
-const requiredConfigKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
-const missingConfig = requiredConfigKeys.filter(key => !firebaseConfig[key as keyof typeof firebaseConfig]);
-
-if (missingConfig.length > 0) {
-  const errorMessage = `Firebase initialization failed: Missing environment variables for: ${missingConfig.join(', ')}. Please ensure your .env.local file is correctly configured.`;
-  console.error(errorMessage);
-  throw new Error(errorMessage);
-}
-
-// Cast to FirebaseOptions directly
-export const app = getApps().length ? getApp() : initializeApp(firebaseConfig as FirebaseOptions);
-
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
-export const storage: FirebaseStorage = getStorage(app);
-export const functions: Functions = getFunctions(app);
-
+// ── App Check (browser only) ───────────────────────────────────────────────────
 declare global {
-  interface Window {
-    FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;
-  }
+  // eslint-disable-next-line no-var
+  var __appCheckInit?: boolean;
+  // eslint-disable-next-line no-var
+  var FIREBASE_APPCHECK_DEBUG_TOKEN: boolean | string | undefined;
 }
 
-let appCheckInstance: AppCheck | undefined;
+let appCheckInstance: AppCheck | undefined; // Declare appCheckInstance here
 
-if (typeof window !== 'undefined') {
-  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  console.log('App Check reCAPTCHA Site Key (from env):', recaptchaSiteKey); // Debug log
+if (typeof window !== 'undefined' && !globalThis.__appCheckInit) {
+  try {
+    const rawKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    const finalRecaptchaSiteKey =
+      typeof rawKey === 'string' && rawKey.trim().length > 0 ? rawKey.trim() : null;
 
-  let finalRecaptchaSiteKey: string | undefined;
-
-  // Ensure it's a string and not empty after trimming
-  if (typeof recaptchaSiteKey === 'string') {
-    const trimmedKey = recaptchaSiteKey.trim();
-    if (trimmedKey.length > 0) {
-      finalRecaptchaSiteKey = trimmedKey;
-    }
-  }
-
-  if (finalRecaptchaSiteKey) {
+    // Optional: easy local debug
     if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
-      // @ts-ignore
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      globalThis.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
 
-    try {
+    if (finalRecaptchaSiteKey) {
       appCheckInstance = initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(finalRecaptchaSiteKey),
         isTokenAutoRefreshEnabled: true,
       });
-    } catch (e: any) {
-      console.warn('Firebase App Check initialization failed, likely already initialized or an environment issue:', e);
-      appCheckInstance = undefined;
+      globalThis.__appCheckInit = true;
+    } else {
+      // If you *require* App Check in prod, surface a loud error there:
+      const mustHaveKey =
+        process.env.NODE_ENV === 'production' &&
+        process.env.NEXT_PUBLIC_USE_EMULATORS !== 'true';
+
+      const msg =
+        'AppCheck: NEXT_PUBLIC_RECAPTCHA_SITE_KEY missing/empty; skipping initializeAppCheck.';
+      if (mustHaveKey) throw new Error(msg);
+      if (process.env.NODE_ENV !== 'test') console.warn(msg);
     }
-  } else {
-    console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not a valid, non-empty string. Firebase App Check will not be initialized.');
-    appCheckInstance = undefined;
+  } catch (err) {
+    // Don’t crash the app—log once and continue (Auth/DB still work).
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('AppCheck init failed:', err);
+    }
   }
 }
 
-export const appCheck = appCheckInstance;
-
-export const analyticsPromise: Promise<Analytics | null> = isSupported().then((ok) => (ok ? getAnalytics(app) : null));
-
-export default app;
+// ── Exports ───────────────────────────────────────────────────────────────────
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export { app };
+export const appCheck = appCheckInstance; // Export appCheckInstance as appCheck
