@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import * as cors from 'cors'; // Changed to import * as cors
+import * as cors from 'cors'; // Corrected to import * as cors
 import { hashIpAddress } from '../utils/security';
 import { FraudReason } from '../types';
 

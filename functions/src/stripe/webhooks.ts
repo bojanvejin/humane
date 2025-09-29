@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
-import * as cors from 'cors'; // Changed to import * as cors
+import * as cors from 'cors'; // Corrected to import * as cors
 
 const corsHandler = cors({ origin: true });
 
