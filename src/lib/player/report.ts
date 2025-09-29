@@ -1,8 +1,7 @@
 import { getAuth } from 'firebase/auth';
 import app from '@/lib/firebase';
 import { generateUuid } from '@/lib/utils/security';
-import { getAppCheck } from 'firebase/app'; // Corrected: getAppCheck is from firebase/app
-import { getToken as getAppCheckToken } from 'firebase/app-check';
+import { getAppCheck, getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected: getAppCheck is from firebase/app-check
 
 // Define the endpoint for the Cloud Function
 // For local emulators, this URL needs to be specific to the v2 onRequest function.
