@@ -9,7 +9,7 @@ const sum = (arr: number[]): number => arr.reduce((acc, val) => acc + val, 0);
 export const calculateUCPSPayouts = onSchedule({
   schedule: '0 3 2 * *', // Runs at 03:00 on the 2nd of every month
   timeZone: 'America/Los_Angeles', // Specify a timezone, e.g., 'America/Los_Angeles'
-}, async (event) => {
+}, async (event): Promise<void> => { // Explicitly define return type as Promise<void>
   console.log('Running monthly UCPS payout calculation for period:', event.scheduleTime);
   
   // Derive the period (YYYY-MM) for which payouts are being calculated
@@ -34,8 +34,8 @@ export const calculateUCPSPayouts = onSchedule({
     subscriptionsSnapshot.forEach(doc => {
       const sub = doc.data() as Subscription;
       // Ensure the subscription was active for at least part of the target month
-      // This is a simplified check; a more robust system would check billing cycles.
-      if (sub.currentPeriodEnd.toDate() >= new Date(`${period}-01T00:00:00Z`)) {
+      // currentPeriodEnd is already a Date object, no need for .toDate()
+      if (sub.currentPeriodEnd >= new Date(`${period}-01T00:00:00Z`)) {
         activeSubscriptions.push({ ...sub, id: doc.id });
       }
     });
@@ -60,7 +60,7 @@ export const calculateUCPSPayouts = onSchedule({
       playsSnapshot.forEach(doc => {
         const play = doc.data() as Play;
         // Ensure play has artistIds and duration
-        if (play.trackId && play.duration > 0) {
+        if (play.trackId && play.duration > 0 && play.artistIds && play.artistIds.length > 0) {
           qualifiedPlays.push({ ...play, id: doc.id });
         }
       });
@@ -84,10 +84,7 @@ export const calculateUCPSPayouts = onSchedule({
         const share = playWeightedListenTime / totalWeightedListenTime;
         const allocatedAmount = netAllocatableRevenue * share;
 
-        // Assuming each play has an associated artistId (or multiple artistIds)
-        // For simplicity, we'll assume a single artistId per track for now, or distribute evenly if multiple.
-        // The `Track` interface has `artistId` and `collaborators`. The `Play` interface has `artistIds[]`.
-        // Let's use `play.artistIds` and distribute evenly among them.
+        // Use play.artistIds and distribute evenly among them.
         if (play.artistIds && play.artistIds.length > 0) {
           const amountPerArtist = allocatedAmount / play.artistIds.length;
           for (const artistId of play.artistIds) {
@@ -116,16 +113,16 @@ export const calculateUCPSPayouts = onSchedule({
           directSales: 0,
         },
         status: 'pending',
-        createdAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp() as admin.firestore.Timestamp, // Cast to Timestamp
       };
       batch.set(payoutRef, payout, { merge: true });
     }
     await batch.commit();
 
     console.log(`UCPS calculation for period ${period} completed. ${artistPayouts.size} artist payouts generated.`);
-    return null;
+    return Promise.resolve(); // Explicitly return Promise.resolve()
   } catch (error) {
     console.error(`Error during UCPS calculation for period ${period}:`, error);
-    return null;
+    return Promise.reject(error); // Explicitly return Promise.reject() on error
   }
 });

@@ -1,6 +1,6 @@
 import { getAuth } from 'firebase/auth';
-import { app, appCheck } from '@/lib/firebase'; // Corrected named imports for app and appCheck
-import { generateUuid } from '@/lib/utils/security';
+import { app, appCheck } from '../firebase'; // Corrected named imports for app and appCheck
+import { generateUuid } from '../utils/security';
 import { getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected imports
 
 // Define the endpoint for the Cloud Function

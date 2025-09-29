@@ -6,7 +6,7 @@ import useEmblaCarousel, {
 } from "embla-carousel-react"
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@humane/lib/utils"
 import { Button, type ButtonProps } from "@/components/ui/button"
 
 type CarouselContextProps = {
@@ -16,9 +16,7 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
-  opts?: Parameters<typeof useEmblaCarousel>[0] // Added opts
-  orientation?: "horizontal" | "vertical" // Added orientation
-} & React.ComponentPropsWithoutRef<"div">
+} & React.ComponentPropsWithoutRef<typeof Carousel>
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
 
@@ -53,18 +51,17 @@ const Carousel = React.forwardRef<
     },
     ref
   ) => {
-    const [carouselRef, api] = useEmblaCarousel({
-      ...opts,
-      axis: orientation === "horizontal" ? "x" : "y",
-    })
+    const [carouselRef, api] = useEmblaCarousel(
+      {
+        ...opts,
+        axis: orientation === "horizontal" ? "x" : "y",
+      },
+      []
+    )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
-    const onSelect = React.useCallback((api: UseEmblaCarouselType[1]) => {
-      if (!api) {
-        return
-      }
-
+    const onSelect = React.useCallback((api: any) => {
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
     }, [])
@@ -95,12 +92,13 @@ const Carousel = React.forwardRef<
         return
       }
 
-      onSelect(api)
-      api.on("reInit", onSelect)
+      setApi?.(api)
       api.on("select", onSelect)
+      api.on("reInit", onSelect)
 
-      if (setApi) {
-        setApi(api)
+      return () => {
+        api.off("select", onSelect)
+        api.off("reInit", onSelect)
       }
     }, [api, onSelect, setApi])
 
@@ -109,18 +107,17 @@ const Carousel = React.forwardRef<
         value={{
           carouselRef,
           api: api,
-          opts, // Pass opts to context
-          orientation:
-            orientation || (opts?.axis === "y" ? "vertical" : "horizontal"), // Pass orientation to context
           scrollPrev,
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          orientation,
+          ...props,
         }}
       >
         <div
           ref={ref}
-          onKeyDown={handleKeyDown}
+          onKeyDownCapture={handleKeyDown}
           className={cn("relative", className)}
           role="region"
           aria-roledescription="carousel"
@@ -142,26 +139,6 @@ const Carousel = React.forwardRef<
   }
 )
 Carousel.displayName = "Carousel"
-
-const CarouselContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-  const { orientation } = useCarousel()
-
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "flex",
-        orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
-        className
-      )}
-      {...props}
-    />
-  )
-})
-CarouselContent.displayName = "CarouselContent"
 
 const CarouselItem = React.forwardRef<
   HTMLDivElement,
@@ -203,8 +180,8 @@ const CarouselPrevious = React.forwardRef<
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
-      onClick={scrollPrev}
       disabled={!canScrollPrev}
+      onClick={scrollPrev}
       {...props}
     >
       {orientation === "horizontal" ? (
@@ -236,8 +213,8 @@ const CarouselNext = React.forwardRef<
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
-      onClick={scrollNext}
       disabled={!canScrollNext}
+      onClick={scrollNext}
       {...props}
     >
       {orientation === "horizontal" ? (

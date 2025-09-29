@@ -100,6 +100,7 @@ export interface Play {
   fraudReasons?: FraudReason[];
   fraudScore: number; // 0-1
   weight?: number; // Added for UCPS calculation
+  artistIds?: string[]; // Added artistIds to Play interface
   deviceInfo: {
     userAgent: string;
     ipAddress: string; // Hashed IP
@@ -145,7 +146,7 @@ export interface Payout {
   };
   stripePayoutId?: string;
   status: 'pending' | 'processing' | 'paid' | 'failed';
-  createdAt: Date;
+  createdAt: admin.firestore.Timestamp; // Changed to Timestamp
   paidAt?: Date;
 }
 

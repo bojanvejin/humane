@@ -5,14 +5,19 @@ import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@humane/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetOverlay, SheetPortal } from "@/components/ui/sheet" // Import SheetOverlay and SheetPortal
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetOverlay,
+  SheetPortal,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 const sidebarVariants = cva(
-  "flex h-full flex-col bg-sidebar text-sidebar-foreground",
+  "flex h-full flex-col overflow-hidden bg-sidebar text-sidebar-foreground",
   {
     variants: {
       variant: {
@@ -21,10 +26,7 @@ const sidebarVariants = cva(
       },
       size: {
         default: "w-64",
-        sm: "w-56",
-        lg: "w-72",
-        xl: "w-80",
-        full: "w-full",
+        collapsed: "w-14",
       },
     },
     defaultVariants: {
@@ -34,15 +36,13 @@ const sidebarVariants = cva(
   }
 )
 
-interface SidebarProps
+export interface SidebarProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sidebarVariants> {
   asChild?: boolean
-  mobileBreakpoint?: number
-  defaultOpen?: boolean
-  nav: React.ReactNode
-  footer?: React.ReactNode
-  header?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: React.ReactNode
 }
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
@@ -52,118 +52,51 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       variant,
       size,
       asChild = false,
-      mobileBreakpoint,
-      defaultOpen = false,
-      nav,
-      footer,
-      header,
+      open,
+      onOpenChange,
+      trigger,
+      children,
       ...props
     },
     ref
   ) => {
     const Comp = asChild ? Slot : "div"
-    const isMobile = useIsMobile()
-    const [openMobile, setOpenMobile] = React.useState(defaultOpen)
-
-    if (isMobile) {
-      return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-          <SheetPortal>
-            <SheetOverlay /> {/* Add SheetOverlay */}
-            <SheetContent
-              data-sidebar="sidebar"
-              data-mobile="true"
-              className={cn(sidebarVariants({ variant, size, className}))}
-              style={
-                {
-                  "--mobile-breakpoint": `${mobileBreakpoint}px`,
-                } as React.CSSProperties
-              }
-              side="left" // Explicitly set side prop
-              {...props} // Pass remaining props to SheetContent
-            >
-              {header}
-              <ScrollArea className="flex-1">
-                <nav className="grid items-start gap-2 text-sm font-medium lg:px-4">
-                  {nav}
-                </nav>
-              </ScrollArea>
-              {footer}
-            </SheetContent>
-          </SheetPortal>
-        </Sheet>
-      )
-    }
 
     return (
-      <Comp
-        ref={ref}
-        data-sidebar="sidebar"
-        className={cn(sidebarVariants({ variant, size, className }))}
-        style={
-          {
-            "--mobile-breakpoint": `${mobileBreakpoint}px`,
-          } as React.CSSProperties
-        }
-        {...props}
-      >
-        {header}
-        <ScrollArea className="flex-1">
-          <nav className="grid items-start gap-2 text-sm font-medium lg:px-4">
-            {nav}
-          </nav>
-        </ScrollArea>
-        {footer}
-      </Comp>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
+        <SheetPortal>
+          <SheetOverlay />
+          <SheetContent
+            side="left"
+            className={cn(sidebarVariants({ variant, size, className }))}
+            {...props}
+            ref={ref}
+          >
+            {children}
+          </SheetContent>
+        </SheetPortal>
+      </Sheet>
     )
   }
 )
 Sidebar.displayName = "Sidebar"
 
-interface SidebarTriggerProps
-  extends React.ComponentPropsWithoutRef<typeof Button> {} // Extend ButtonProps directly
-
-const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
-  ({ className, ...props }, ref) => {
-    const isMobile = useIsMobile()
-    const { setOpenMobile } = useSidebar()
-
-    if (isMobile) {
-      return (
-        <Button
-          ref={ref}
-          data-sidebar="trigger"
-          variant="ghost" // Ensure variant is passed
-          size="icon" // Ensure size is passed
-          className={cn("h-8 w-8", className)}
-          onClick={() => setOpenMobile(true)}
-          {...props}
-        >
-          <PanelLeft className="h-5 w-5" />
-          <span className="sr-only">Toggle Sidebar</span>
-        </Button>
-      )
-    }
-
-    return null
-  }
-)
+const SidebarTrigger = React.forwardRef<
+  HTMLButtonElement,
+  ButtonProps
+>(({ className, ...props }, ref) => (
+  <Button
+    ref={ref}
+    variant="ghost" // Ensure variant is passed
+    size="icon" // Ensure size is passed
+    className={cn("h-8 w-8", className)}
+    {...props}
+  >
+    <PanelLeft className="h-4 w-4" />
+    <span className="sr-only">Toggle Sidebar</span>
+  </Button>
+))
 SidebarTrigger.displayName = "SidebarTrigger"
 
-interface SidebarContextProps {
-  setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>
-}
-
-const SidebarContext = React.createContext<SidebarContextProps | null>(null)
-
-function useSidebar() {
-  const context = React.useContext(SidebarContext)
-
-  if (!context) {
-    throw new Error("useSidebar must be used within a <Sidebar />")
-  }
-
-  return context
-}
-
-export { Sidebar, SidebarTrigger }
+export { Sidebar, SidebarTrigger, sidebarVariants }

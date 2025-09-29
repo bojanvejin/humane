@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { FirebaseAppCheckProvider } from "@/components/providers/FirebaseAppCheckProvider";
-import { StripeProvider } from "@/components/providers/StripeProvider"; // Import StripeProvider
+import { StripeProvider } from "@/components/providers/StripeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { PlayerProvider } from "@/components/player/PlayerProvider";
 import { MiniPlayer } from "@/components/player/MiniPlayer";
@@ -35,7 +35,7 @@ export default function RootLayout({
       >
         <FirebaseAppCheckProvider>
           <AuthProvider>
-            <StripeProvider> {/* Wrap with StripeProvider */}
+            <StripeProvider>
               <PlayerProvider>
                 {children}
                 <MiniPlayer />
