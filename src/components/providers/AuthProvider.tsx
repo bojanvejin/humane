@@ -4,8 +4,6 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types'; // Import User type
 
-type UserRole = User['role']; // Define UserRole type
-
 interface AuthContextType {
   user: ReturnType<typeof useAuth>['user'];
   loading: boolean;
@@ -13,8 +11,8 @@ interface AuthContextType {
   signupWithEmail: (email: string, password: string, displayName: string) => Promise<any>;
   loginWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
-  hasRole: (role: UserRole) => boolean; // Corrected type
-  hasAnyRole: (roles: UserRole[]) => boolean; // Corrected type
+  hasRole: (role: User['role']) => boolean; // Corrected type to use User['role'] directly
+  hasAnyRole: (roles: User['role'][]) => boolean; // Corrected type to use User['role'] directly
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
