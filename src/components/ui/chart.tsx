@@ -17,7 +17,7 @@ interface PayloadItem {
   value?: any;
   name?: string;
   unit?: React.ReactNode;
-  dataKey?: string | number; // Updated to be optional
+  dataKey?: string | number | null; // Updated to include null
   color?: string;
   fill?: string;
   stroke?: string;
@@ -51,9 +51,13 @@ const Chart: React.FC<ChartProps> = ({
   // Use TooltipProps<any, any> directly for type compatibility
   const renderTooltipContent = (props: TooltipProps<any, any>) => {
     if (props.active && props.payload && props.payload.length) {
-      const item = props.payload[0] as PayloadItem; // Cast to PayloadItem
-      // Ensure item.dataKey is treated as string for config lookup
-      const dataKey = item.dataKey as string; 
+      const item = props.payload[0] as PayloadItem;
+      
+      // Safely get dataKey for the first item
+      const initialDataKey = item.dataKey;
+      if (initialDataKey == null) return null; // If the primary dataKey is null/undefined, don't render tooltip
+      const dataKey = String(initialDataKey); // Convert to string
+
       const { format } = config[dataKey] || {};
       const value = item.value;
       const formattedValue = format ? format(value as number) : value;
@@ -61,8 +65,11 @@ const Chart: React.FC<ChartProps> = ({
       return (
         <div className="rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
           <p className="text-sm font-medium">{props.label}</p>
-          {props.payload.map((payloadItem: PayloadItem, index: number) => { // Cast to PayloadItem
-            const key = payloadItem.dataKey as string;
+          {props.payload.map((payloadItem: PayloadItem, index: number) => {
+            const currentPayloadDataKey = payloadItem.dataKey;
+            if (currentPayloadDataKey == null) return null; // Skip this payload item if its dataKey is null/undefined
+            const key = String(currentPayloadDataKey); // Convert to string
+
             const itemConfig = config[key];
             if (!itemConfig) return null;
 
