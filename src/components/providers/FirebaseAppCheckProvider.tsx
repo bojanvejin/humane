@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { getAppCheck, getToken } from 'firebase/app-check'; // Corrected imports
-import app from '@/lib/firebase';
+import { getToken } from 'firebase/app-check';
+import { appCheck } from '@/lib/firebase'; // Import the exported appCheck instance
 
 interface AppCheckContextType {
   appCheckToken: string | null;
@@ -31,9 +31,13 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
   const refreshAppCheckToken = async () => {
     setLoading(true);
     try {
-      const appCheckInstance = getAppCheck(app); // Get the already initialized App Check instance
-      const { token } = await getToken(appCheckInstance, true);
-      setAppCheckToken(token);
+      if (appCheck) { // Use the exported appCheck instance
+        const { token } = await getToken(appCheck, true);
+        setAppCheckToken(token);
+      } else {
+        console.warn('App Check is not initialized. Cannot refresh token.');
+        setAppCheckToken(null);
+      }
     } catch (error) {
       console.error('Error refreshing App Check token:', error);
       setAppCheckToken(null);
@@ -43,11 +47,9 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
-      const appCheckInstance = getAppCheck(app); // Get the already initialized App Check instance
-      
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && appCheck) { // Check if appCheck is available
       // Get the initial token
-      getToken(appCheckInstance, true)
+      getToken(appCheck, true) // Use the exported appCheck instance
         .then(({ token }) => {
           setAppCheckToken(token);
         })
@@ -61,7 +63,7 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [appCheck]); // Add appCheck to dependency array
 
   return (
     <AppCheckContext.Provider value={{ appCheckToken, loading, refreshAppCheckToken }}>

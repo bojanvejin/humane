@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck, AppCheck } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -31,21 +31,28 @@ declare global {
   interface Window { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string }
 }
 
+let appCheckInstance: AppCheck | undefined;
+
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
   if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
     window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
-  // Initialize App Check if not already initialized for this app instance
+  
+  // Check if App Check is already initialized for this app instance
+  // initializeAppCheck will throw if called more than once for the same app.
+  // We can safely call it once and then retrieve the instance.
   try {
-    getAppCheck(app); // Try to get an existing instance
+    appCheckInstance = getAppCheck(app); // Try to get an existing instance
   } catch (e) {
     // If it throws, it means it's not initialized, so initialize it
-    initializeAppCheck(app, {
+    appCheckInstance = initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
       isTokenAutoRefreshEnabled: true,
     });
   }
 }
+
+export const appCheck = appCheckInstance; // Export the initialized appCheck instance
 
 // Initialize Analytics only if supported (client-side)
 export const analyticsPromise = isSupported().then((ok) => ok ? getAnalytics(app) : null);
