@@ -1,6 +1,5 @@
 'use client'; // This page needs to be a client component to use usePlayer
 
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/components/player/PlayerProvider"; // Import usePlayer hook
 import { PlayableTrack } from "@/types"; // Import PlayableTrack type
@@ -23,7 +22,7 @@ export default function Home() {
   };
 
   return (
-    <div className="grid grid-rows-[1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[1fr] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-1 items-center sm:items-start">
         <h1 className="text-4xl font-bold">Welcome to HUMANE</h1>
         <p className="text-lg text-muted-foreground">
@@ -33,7 +32,6 @@ export default function Home() {
           {playerState.isLoading ? 'Loading...' : 'Play Placeholder Track'}
         </Button>
       </main>
-      <MadeWithDyad />
     </div>
   );
 }
