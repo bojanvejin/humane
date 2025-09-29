@@ -1,5 +1,5 @@
 import { getAuth } from 'firebase/auth';
-import app, { appCheck } from '@/lib/firebase'; // Import appCheck from firebase.ts
+import { app, appCheck } from '@/lib/firebase'; // Corrected named imports for app and appCheck
 import { generateUuid } from '@/lib/utils/security';
 import { getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected imports
 
