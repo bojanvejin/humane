@@ -8,9 +8,10 @@ import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
-const formatTime = (seconds: number) => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
+const formatTime = (seconds: number | null | undefined) => {
+  const safeSeconds = typeof seconds === 'number' && !isNaN(seconds) ? seconds : 0;
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = Math.floor(safeSeconds % 60);
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
