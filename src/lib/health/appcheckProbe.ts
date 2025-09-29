@@ -1,4 +1,4 @@
-import { getToken } from 'firebase/app-check';
+import { getToken, AppCheckTokenResult } from 'firebase/app-check'; // Import AppCheckTokenResult
 import { appCheck } from '../firebase'; // Import appCheck instance
 
 export async function appCheckHealth() {
@@ -8,7 +8,7 @@ export async function appCheckHealth() {
     if (!appCheck) {
       return { ok: false, error: 'App Check is not initialized.' };
     }
-    const tokenResult = await getToken(appCheck, /* forceRefresh */ false);
+    const tokenResult: AppCheckTokenResult = await getToken(appCheck, /* forceRefresh */ false);
     const ttl = tokenResult.expireTimeMillis - Date.now(); // Calculate TTL
     return { ok: true, ttl: ttl };
   } catch (e) {
