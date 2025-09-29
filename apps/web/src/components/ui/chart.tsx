@@ -14,6 +14,7 @@ import {
   YAxis,
   Tooltip,
   type TooltipProps,
+  Legend, // Import Legend
 } from 'recharts';
 import { cn } from "@humane/lib/utils"
 
@@ -56,9 +57,13 @@ interface ChartLegendProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'c
 
 const ChartLegend = React.forwardRef<HTMLDivElement, ChartLegendProps>(
   ({ legendContent, className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex justify-center gap-4 p-4", className)} {...props}>
-      {legendContent}
-    </div>
+    <Legend
+      content={
+        <div ref={ref} className={cn("flex justify-center gap-4 p-4", className)} {...props}>
+          {legendContent}
+        </div>
+      }
+    />
   )
 );
 ChartLegend.displayName = "ChartLegend";
@@ -182,7 +187,7 @@ const Chart: React.FC<ChartComponentProps> = ({
           cursor={false}
           content={<ChartTooltipContent hideLabel />}
         />
-        <ChartLegend content={<ChartLegendContent config={config} />} />
+        <ChartLegend legendContent={<ChartLegendContent config={config} />} />
         {Object.entries(config).map(([key, { label, color, type }]) => {
           if (type === chartType) {
             return (
