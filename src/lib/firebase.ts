@@ -42,8 +42,9 @@ declare global {
 let appCheckInstance: AppCheck | undefined;
 
 if (typeof window !== 'undefined') {
-  if (!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
-    console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set. Firebase App Check will not be initialized.');
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  if (!recaptchaSiteKey || recaptchaSiteKey.trim() === '') { // Check for null/undefined or empty string
+    console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set or is empty. Firebase App Check will not be initialized.');
   } else {
     if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
       // @ts-ignore
@@ -52,7 +53,7 @@ if (typeof window !== 'undefined') {
 
     try {
       appCheckInstance = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
+        provider: new ReCaptchaV3Provider(recaptchaSiteKey), // Use the validated key
         isTokenAutoRefreshEnabled: true,
       });
     } catch (e: any) {
