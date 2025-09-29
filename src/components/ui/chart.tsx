@@ -9,13 +9,20 @@ import {
   Legend,
   ResponsiveContainer,
   type LegendType,
-  type TooltipProps, // Keep TooltipProps for deriving Payload
+  type TooltipProps,
 } from 'recharts';
 
-// Define Payload type from TooltipProps, using 'any' for generics to simplify
-// This correctly extracts the type of an element in the 'payload' array,
-// even if 'payload' itself is optional or undefined.
-type PayloadItem = TooltipProps<any, any>['payload'] extends (infer U)[] ? U : never;
+// Explicitly define PayloadItem based on common Recharts payload structure
+interface PayloadItem {
+  value: any;
+  name?: string;
+  unit?: string;
+  dataKey: string | number;
+  color?: string;
+  fill?: string;
+  stroke?: string;
+  // Add other properties if needed from Recharts Payload
+}
 
 interface ChartConfig {
   [key: string]: {
@@ -41,13 +48,10 @@ const Chart: React.FC<ChartProps> = ({
   yAxisLabel,
   height = 300,
 }) => {
-  const renderTooltipContent = (props: {
-    active?: boolean;
-    payload?: PayloadItem[]; // Use the locally defined PayloadItem type
-    label?: string | number;
-  }) => {
+  // Use TooltipProps<any, any> directly for type compatibility
+  const renderTooltipContent = (props: TooltipProps<any, any>) => {
     if (props.active && props.payload && props.payload.length) {
-      const item = props.payload[0];
+      const item = props.payload[0] as PayloadItem; // Cast to PayloadItem
       // Ensure item.dataKey is treated as string for config lookup
       const dataKey = item.dataKey as string; 
       const { format } = config[dataKey] || {};
@@ -57,7 +61,7 @@ const Chart: React.FC<ChartProps> = ({
       return (
         <div className="rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
           <p className="text-sm font-medium">{props.label}</p>
-          {props.payload.map((payloadItem: PayloadItem, index: number) => {
+          {props.payload.map((payloadItem: PayloadItem, index: number) => { // Cast to PayloadItem
             const key = payloadItem.dataKey as string;
             const itemConfig = config[key];
             if (!itemConfig) return null;
