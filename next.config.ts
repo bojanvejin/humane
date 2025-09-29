@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
+import type { WebpackConfigContext } from 'next/dist/server/config-shared'; // Import WebpackConfigContext
 
 const nextConfig: NextConfig = {
-  webpack: (config) => {
+  webpack: (config: WebpackConfigContext['webpack'], options: WebpackConfigContext) => {
     if (process.env.NODE_ENV === "development") {
       config.module.rules.push({
         test: /\.(jsx|tsx)$/,
