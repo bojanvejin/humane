@@ -28,10 +28,7 @@ export type ChartConfig = {
   };
 };
 
-// Define ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent
-// These are simplified versions based on common Shadcn/UI patterns.
-// In a full Shadcn/UI setup, these would typically be imported from a dedicated file.
-
+// Define ChartContainer
 interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   config: ChartConfig;
   children: React.ReactNode;
@@ -52,6 +49,7 @@ const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerProps>(
 );
 ChartContainer.displayName = "ChartContainer";
 
+// Define ChartLegend
 interface ChartLegendProps extends React.HTMLAttributes<HTMLDivElement> {
   content?: React.ReactNode;
 }
@@ -65,6 +63,7 @@ const ChartLegend = React.forwardRef<HTMLDivElement, ChartLegendProps>(
 );
 ChartLegend.displayName = "ChartLegend";
 
+// Define ChartLegendContent
 interface ChartLegendContentProps extends React.HTMLAttributes<HTMLDivElement> {
   config?: ChartConfig;
 }
@@ -83,6 +82,7 @@ const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendContentPr
 );
 ChartLegendContent.displayName = "ChartLegendContent";
 
+// Define ChartTooltip
 interface ChartTooltipProps extends TooltipProps<any, any> {
   hideLabel?: boolean;
 }
@@ -90,12 +90,12 @@ interface ChartTooltipProps extends TooltipProps<any, any> {
 const ChartTooltip = ({ content, ...props }: ChartTooltipProps) => {
   return (
     <Tooltip
-      content={({ active, payload, label }) => {
+      content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string | number }) => {
         if (active && payload && payload.length) {
           return (
             <div className="rounded-lg border bg-background p-2 text-sm shadow-md">
               {props.hideLabel ? null : <div className="font-medium">{label}</div>}
-              {payload.map((entry, index) => (
+              {payload.map((entry: any, index: number) => (
                 <div key={`item-${index}`} className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground">{entry.name}:</span>
                   <span className="font-medium">{entry.value}</span>
@@ -112,6 +112,7 @@ const ChartTooltip = ({ content, ...props }: ChartTooltipProps) => {
 };
 ChartTooltip.displayName = "ChartTooltip";
 
+// Define ChartTooltipContent
 interface ChartTooltipContentProps extends React.HTMLAttributes<HTMLDivElement> {
   hideLabel?: boolean;
 }
@@ -203,4 +204,4 @@ const Chart: React.FC<ChartComponentProps> = ({
   );
 };
 
-export { Chart, ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent };
+export { Chart, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent };
