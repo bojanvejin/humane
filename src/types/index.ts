@@ -160,8 +160,8 @@ export interface FanReceipt {
 export interface UserTrackAggregate {
   userId: string;
   trackId: string;
-  lastPlayAt: admin.firestore.Timestamp;
-  windowEndsAt: admin.firestore.Timestamp;
+  lastPlayAt: Date;
+  windowEndsAt: Date;
   playCount: number;
-  updatedAt: admin.firestore.Timestamp;
+  updatedAt: Date;
 }

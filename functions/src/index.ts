@@ -16,5 +16,5 @@ export { processTrackUpload } from './tracks/processTrackUpload';
 // Scheduled functions (v2)
 export const scheduledUCPSCalculation = onSchedule('0 0 * * *', async (event) => { // Converted to v2 onSchedule
     console.log('Running scheduled UCPS calculation (v2).');
-    // await calculateUCPSPayouts(); // Uncomment when calculateUCPSPayouts is ready
+    await calculateUCPSPayouts(); // Call the placeholder function
 });

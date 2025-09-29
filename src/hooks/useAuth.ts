@@ -6,7 +6,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updateProfile // Added this import
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';

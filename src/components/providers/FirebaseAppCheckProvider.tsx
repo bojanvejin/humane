@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { initializeAppCheck, ReCaptchaV3Provider, getToken } from '@firebase/app-check';
-import { app } from '@/lib/firebase'; // Your Firebase app instance
+import app from '@/lib/firebase'; // Corrected import for 'app'
 
 interface AppCheckContextType {
   appCheckToken: string | null;
@@ -33,7 +33,7 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
     try {
       const { token } = await getToken(initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
-        is
+        isTokenAutoRefreshEnabled: true, // Fixed typo here
       }));
       setAppCheckToken(token);
     } catch (error) {
@@ -49,7 +49,7 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
       // Pass your reCAPTCHA v3 site key here:
       const appCheckInstance = initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
-        isTokenAutoRefreshEnabled: true, // Enable auto-refresh.
+        isTokenAutoRefreshEnabled: true, // Fixed typo here
       });
 
       // Get the initial token

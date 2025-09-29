@@ -10,8 +10,8 @@ interface AuthContextType {
   signupWithEmail: (email: string, password: string, displayName: string) => Promise<any>;
   loginWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
-  hasRole: (role: string) => boolean;
-  hasAnyRole: (roles: string[]) => boolean;
+  hasRole: (role: ReturnType<typeof useAuth>['user']['role']) => boolean; // Corrected type
+  hasAnyRole: (roles: ReturnType<typeof useAuth>['user']['role'][]) => boolean; // Corrected type
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

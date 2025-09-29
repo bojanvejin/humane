@@ -100,7 +100,7 @@ exports.reportPlayBatch = (0, https_1.onRequest)(async (req, res) => {
             return res.status(401).send('Unauthorized: Invalid App Check token.');
         }
         // 3. Extract and hash client IP
-        const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.ip || '0.0.0.0'; // Added '0.0.0.0' fallback
+        const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.ip || '0.0.0.0'; // Ensured clientIp is always a string
         const hashedIp = (0, security_1.hashIpAddress)(clientIp, IP_HASH_SALT);
         try {
             // Validate input payload
