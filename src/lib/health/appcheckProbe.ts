@@ -9,6 +9,7 @@ export async function appCheckHealth() {
       return { ok: false, error: 'App Check is not initialized.' };
     }
     const tokenResult: AppCheckTokenResult = await getToken(appCheck, /* forceRefresh */ false);
+    // Accessing expireTimeMillis, which should be part of AppCheckTokenResult
     const ttl = tokenResult.expireTimeMillis - Date.now(); // Calculate TTL
     return { ok: true, ttl: ttl };
   } catch (e) {
