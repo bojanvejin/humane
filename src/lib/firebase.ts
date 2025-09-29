@@ -43,7 +43,8 @@ let appCheckInstance: AppCheck | undefined;
 
 if (typeof window !== 'undefined') {
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  if (!recaptchaSiteKey || recaptchaSiteKey.trim() === '') { // Check for null/undefined or empty string
+  // Ensure recaptchaSiteKey is a string and not empty after trimming
+  if (typeof recaptchaSiteKey !== 'string' || recaptchaSiteKey.trim() === '') {
     console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set or is empty. Firebase App Check will not be initialized.');
   } else {
     if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
