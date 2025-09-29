@@ -43,6 +43,7 @@ let appCheckInstance: AppCheck | undefined;
 
 if (typeof window !== 'undefined') {
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  console.log('App Check reCAPTCHA Site Key:', recaptchaSiteKey); // Added for debugging
   
   let isValidRecaptchaKey = false;
   if (typeof recaptchaSiteKey === 'string' && recaptchaSiteKey.trim() !== '') {
