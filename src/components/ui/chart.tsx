@@ -9,9 +9,11 @@ import {
   Legend,
   ResponsiveContainer,
   type LegendType,
-  type TooltipProps,
-  type Payload, // Import Payload directly
+  type TooltipProps, // Keep TooltipProps for deriving Payload
 } from 'recharts';
+
+// Define Payload type from TooltipProps, using 'any' for generics to simplify
+type PayloadItem = TooltipProps<any, any>['payload'][number];
 
 interface ChartConfig {
   [key: string]: {
@@ -39,7 +41,7 @@ const Chart: React.FC<ChartProps> = ({
 }) => {
   const renderTooltipContent = (props: {
     active?: boolean;
-    payload?: Payload<any, any>[]; // Use the imported Payload type
+    payload?: PayloadItem[]; // Use the locally defined PayloadItem type
     label?: string | number;
   }) => {
     if (props.active && props.payload && props.payload.length) {
@@ -53,7 +55,7 @@ const Chart: React.FC<ChartProps> = ({
       return (
         <div className="rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
           <p className="text-sm font-medium">{props.label}</p>
-          {props.payload.map((payloadItem: Payload<any, any>, index: number) => {
+          {props.payload.map((payloadItem: PayloadItem, index: number) => {
             const key = payloadItem.dataKey as string;
             const itemConfig = config[key];
             if (!itemConfig) return null;
