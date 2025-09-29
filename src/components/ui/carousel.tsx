@@ -4,7 +4,7 @@ import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react" // Added ArrowUp, ArrowDown
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button, type ButtonProps } from "@/components/ui/button"
@@ -16,6 +16,8 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  opts?: Parameters<typeof useEmblaCarousel>[0] // Added opts
+  orientation?: "horizontal" | "vertical" // Added orientation
 } & React.ComponentPropsWithoutRef<"div">
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -107,9 +109,9 @@ const Carousel = React.forwardRef<
         value={{
           carouselRef,
           api: api,
-          opts,
+          opts, // Pass opts to context
           orientation:
-            orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
+            orientation || (opts?.axis === "y" ? "vertical" : "horizontal"), // Pass orientation to context
           scrollPrev,
           scrollNext,
           canScrollPrev,

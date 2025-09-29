@@ -2,12 +2,24 @@
 
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
-import { type ChartConfig } from "@/components/ui/chart"
 
 import { cn } from "@/lib/utils"
 
+// Define ChartConfig type here
+export type ChartConfig = {
+  [k: string]: {
+    label?: string
+    color?: string
+    icon?: React.ComponentType<{ className?: string }>
+    format?: (value: number) => string
+  }
+} & {
+  index?: number
+  colors?: Record<string, string>
+}
+
 // Workaround for https://github.com/recharts/recharts/issues/3615
-function set  ChartStyle(config: ChartConfig) {
+const setChartStyle = (config: ChartConfig) => {
   return {
     "[data-chart]": {
       "--theme-color": `var(--chart-${config.index || 1})`,

@@ -1,10 +1,11 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
-import cors from 'cors'; // Corrected import
+import cors from 'cors';
+import { Request, Response } from 'firebase-functions/v2/https'; // Import Request and Response types
 
 const corsHandler = cors({ origin: true });
 
-export const handleStripeWebhook = onRequest(async (req, res) => {
+export const handleStripeWebhook = onRequest(async (req: Request, res: Response) => {
   // Get services from the default initialized app
   const app = admin.app();
   const db = app.firestore();

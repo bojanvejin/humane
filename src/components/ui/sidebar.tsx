@@ -7,7 +7,7 @@ import { PanelLeft } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetOverlay, SheetPortal } from "@/components/ui/sheet" // Import SheetOverlay and SheetPortal
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -67,26 +67,30 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-          <SheetContent
-            data-sidebar="sidebar"
-            data-mobile="true"
-            className={cn(sidebarVariants({ variant, size, className}))}
-            style={
-              {
-                "--mobile-breakpoint": `${mobileBreakpoint}px`,
-              } as React.CSSProperties
-            }
-            side="left" // Explicitly set side prop
-          >
-            {header}
-            <ScrollArea className="flex-1">
-              <nav className="grid items-start gap-2 text-sm font-medium lg:px-4">
-                {nav}
-              </nav>
-            </ScrollArea>
-            {footer}
-          </SheetContent>
+        <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+          <SheetPortal>
+            <SheetOverlay /> {/* Add SheetOverlay */}
+            <SheetContent
+              data-sidebar="sidebar"
+              data-mobile="true"
+              className={cn(sidebarVariants({ variant, size, className}))}
+              style={
+                {
+                  "--mobile-breakpoint": `${mobileBreakpoint}px`,
+                } as React.CSSProperties
+              }
+              side="left" // Explicitly set side prop
+              {...props} // Pass remaining props to SheetContent
+            >
+              {header}
+              <ScrollArea className="flex-1">
+                <nav className="grid items-start gap-2 text-sm font-medium lg:px-4">
+                  {nav}
+                </nav>
+              </ScrollArea>
+              {footer}
+            </SheetContent>
+          </SheetPortal>
         </Sheet>
       )
     }

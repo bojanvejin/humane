@@ -1,9 +1,9 @@
 import * as admin from 'firebase-admin';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, DocumentSnapshot } from 'firebase-functions/v2/firestore'; // Import DocumentSnapshot
 import { Play, Track, UserTrackAggregate, FraudReason } from '../types';
-import { detectSuspiciousPlay } from '../utils/fraudDetection'; // Updated import
+import { detectSuspiciousPlay } from '../utils/fraudDetection';
 
-export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event) => {
+export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event: DocumentSnapshot) => {
     // Get services from the default initialized app
     const app = admin.app();
     const db = app.firestore();

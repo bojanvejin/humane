@@ -36,16 +36,15 @@ PaginationItem.displayName = "PaginationItem"
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<ButtonProps, "size" | "variant"> & // Include 'variant' here
-  React.ComponentProps<"a">
+} & Pick<ButtonProps, "size" | "variant"> &
+  React.ComponentPropsWithoutRef<"a"> // Use ComponentPropsWithoutRef for 'a'
 
-const PaginationLink = ({
-  className,
-  isActive,
-  size = "icon", // Default size for PaginationLink
-  ...props
-}: PaginationLinkProps) => (
+const PaginationLink = React.forwardRef<
+  HTMLAnchorElement, // Ref type for <a>
+  PaginationLinkProps
+>(({ className, isActive, size = "icon", ...props }, ref) => (
   <a
+    ref={ref}
     aria-current={isActive ? "page" : undefined}
     className={cn(
       buttonVariants({
@@ -56,17 +55,17 @@ const PaginationLink = ({
     )}
     {...props}
   />
-)
+))
 PaginationLink.displayName = "PaginationLink"
 
 const PaginationPrevious = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<typeof PaginationLink>
+  HTMLAnchorElement, // Ref type for <a>
+  React.ComponentPropsWithoutRef<typeof PaginationLink>
 >(({ className, ...props }, ref) => (
   <PaginationLink
     ref={ref}
     aria-label="Go to previous page"
-    size="default" // Explicitly set size here, overriding default from PaginationLink if needed
+    size="default" // Explicitly set size here
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
@@ -77,13 +76,13 @@ const PaginationPrevious = React.forwardRef<
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<typeof PaginationLink>
+  HTMLAnchorElement, // Ref type for <a>
+  React.ComponentPropsWithoutRef<typeof PaginationLink>
 >(({ className, ...props }, ref) => (
   <PaginationLink
     ref={ref}
     aria-label="Go to next page"
-    size="default" // Explicitly set size here, overriding default from PaginationLink if needed
+    size="default" // Explicitly set size here
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >

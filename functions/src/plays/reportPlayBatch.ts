@@ -1,10 +1,11 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import cors from 'cors'; // Corrected import
+import cors from 'cors';
 import { hashIpAddress } from '../utils/security';
-import { detectSuspiciousPlay } from '../utils/fraudDetection'; // Updated import
+import { detectSuspiciousPlay } from '../utils/fraudDetection';
 import { FraudReason } from '../types';
+import { Request, Response } from 'firebase-functions/v2/https'; // Import Request and Response types
 
 const corsHandler = cors({ origin: true });
 
@@ -32,7 +33,7 @@ const PlayBatchPayloadSchema = z.object({
   plays: z.array(PlayEventSchema).max(1000), // Limit batch size
 });
 
-export const reportPlayBatch = onRequest(async (req, res) => {
+export const reportPlayBatch = onRequest(async (req: Request, res: Response) => {
   corsHandler(req, res, async () => {
     // Get services from the default initialized app
     const app = admin.app();
