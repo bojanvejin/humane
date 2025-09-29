@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { Play, Track, UserTrackAggregate, FraudReason } from '../types';
-import { detectSuspiciousPlay } from './reportPlayBatch';
+import { detectSuspiciousPlay } from '../utils/fraudDetection'; // Updated import
 
 export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event) => {
     // Get services from the default initialized app

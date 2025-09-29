@@ -1,4 +1,4 @@
-import { detectSuspiciousPlay } from '../../functions/src/plays/reportPlayBatch';
+import { detectSuspiciousPlay } from '../../functions/src/utils/fraudDetection'; // Updated import
 import { FraudReason } from '../../functions/src/types'; // Import FraudReason type
 
 describe('Fraud Detection', () => {

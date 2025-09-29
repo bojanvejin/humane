@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { initializeAppCheck, ReCaptchaV3Provider, getToken } from '@firebase/app-check';
+import { getToken } from '@firebase/app-check'; // Corrected: getToken is from @firebase/app-check
+import { getAppCheck } from 'firebase/app-check'; // Import getAppCheck
 import app from '@/lib/firebase'; // Corrected import for 'app'
 
 interface AppCheckContextType {
@@ -31,10 +32,8 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
   const refreshAppCheckToken = async () => {
     setLoading(true);
     try {
-      const { token } = await getToken(initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
-        isTokenAutoRefreshEnabled: true, // Fixed typo here
-      }));
+      const appCheckInstance = getAppCheck(app); // Get the already initialized App Check instance
+      const { token } = await getToken(appCheckInstance, true);
       setAppCheckToken(token);
     } catch (error) {
       console.error('Error refreshing App Check token:', error);
@@ -46,12 +45,8 @@ export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> =
 
   useEffect(() => {
     if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
-      // Pass your reCAPTCHA v3 site key here:
-      const appCheckInstance = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
-        isTokenAutoRefreshEnabled: true, // Fixed typo here
-      });
-
+      const appCheckInstance = getAppCheck(app); // Get the already initialized App Check instance
+      
       // Get the initial token
       getToken(appCheckInstance, true)
         .then(({ token }) => {

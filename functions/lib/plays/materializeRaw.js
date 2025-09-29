@@ -36,10 +36,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.materializeRaw = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
-const reportPlayBatch_1 = require("./reportPlayBatch"); // Re-use basic detection
-const db = admin.firestore();
+const reportPlayBatch_1 = require("./reportPlayBatch");
 exports.materializeRaw = (0, firestore_1.onDocumentCreated)("plays_raw/{yyyymm}/events/{eventId}", async (event) => {
-    const rawPlay = event.data?.data();
+    var _a;
+    // Get services from the default initialized app
+    const app = admin.app();
+    const db = app.firestore();
+    const rawPlay = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     const eventId = event.params.eventId;
     const yyyymm = event.params.yyyymm;
     if (!rawPlay) {
@@ -94,12 +97,12 @@ exports.materializeRaw = (0, firestore_1.onDocumentCreated)("plays_raw/{yyyymm}/
         }
         // Materialize the play
         const materializedPlay = {
-            id: eventId,
+            id: eventId, // Use eventId as the materialized play ID
             trackId: rawPlay.trackId,
             userId: rawPlay.userId,
             sessionId: rawPlay.sessionId,
-            duration: rawPlay.duration / 1000,
-            completed: rawPlay.duration >= (trackFullDurationMs * 0.85),
+            duration: rawPlay.duration / 1000, // Store in seconds as per Play interface
+            completed: rawPlay.duration >= (trackFullDurationMs * 0.85), // 85% completion
             suspicious: finalSuspicious,
             fraudReasons: finalFraudReasons.length > 0 ? finalFraudReasons : undefined,
             fraudScore: finalFraudScore,
@@ -142,3 +145,4 @@ exports.materializeRaw = (0, firestore_1.onDocumentCreated)("plays_raw/{yyyymm}/
         return null;
     }
 });
+//# sourceMappingURL=materializeRaw.js.map
