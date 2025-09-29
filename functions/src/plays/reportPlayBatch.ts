@@ -1,13 +1,10 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import cors from 'cors'; // Reverted to default import
+import cors from 'cors';
 import { hashIpAddress } from '../utils/security';
 import { FraudReason } from '../types';
 
-const db = admin.firestore();
-const auth = admin.auth();
-const appCheck = admin.appCheck();
 const corsHandler = cors({ origin: true });
 
 // IMPORTANT: Replace with a strong, secret key from environment variables
@@ -36,6 +33,11 @@ const PlayBatchPayloadSchema = z.object({
 });
 
 export const reportPlayBatch = onRequest(async (req, res) => {
+  // Initialize services inside the function to ensure admin.initializeApp() has run
+  const db = admin.firestore();
+  const auth = admin.auth();
+  const appCheck = admin.appCheck();
+
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
@@ -71,7 +73,7 @@ export const reportPlayBatch = onRequest(async (req, res) => {
     }
 
     // 3. Extract and hash client IP
-    const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.ip || '0.0.0.0'; // Ensured clientIp is always a string
+    const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.ip || '0.0.0.0';
     const hashedIp = hashIpAddress(clientIp, IP_HASH_SALT);
 
     try {
@@ -81,14 +83,8 @@ export const reportPlayBatch = onRequest(async (req, res) => {
       const suspiciousPlayIds: string[] = [];
 
       for (const play of validatedData.plays) {
-        // Ensure the userId in the play events matches the authenticated user's UID
-        // This prevents users from reporting plays for other users.
-        // Note: The PlayEventSchema doesn't include userId, so we'll add it here.
-        // If userId was part of the client-sent payload, it would be validated against authenticatedUserId.
-        // For now, we assume the client doesn't send userId and it's assigned server-side.
-
         const currentTimestamp = new Date(play.timestamp);
-        const yyyymm = currentTimestamp.toISOString().substring(0, 7).replace('-', ''); // e.g., '202407'
+        const yyyymm = currentTimestamp.toISOString().substring(0, 7).replace('-', '');
         
         const playRef = db.collection('plays_raw').doc(yyyymm).collection('events').doc(play.eventId);
         
@@ -98,7 +94,7 @@ export const reportPlayBatch = onRequest(async (req, res) => {
           trackFullDurationMs: play.trackFullDurationMs,
           deviceInfo: {
             userAgent: play.deviceInfo.userAgent,
-            ipAddress: hashedIp, // Use hashed IP
+            ipAddress: hashedIp,
           },
         });
 
@@ -108,24 +104,18 @@ export const reportPlayBatch = onRequest(async (req, res) => {
 
         const playData = {
           ...play,
-          userId: authenticatedUserId, // Assign authenticated user ID
+          userId: authenticatedUserId,
           deviceInfo: {
             ...play.deviceInfo,
-            ipAddress: hashedIp, // Store hashed IP
+            ipAddress: hashedIp,
           },
           suspicious: isSuspicious,
           fraudReasons: reasons.length > 0 ? reasons : admin.firestore.FieldValue.delete(),
           fraudScore: fraudScore,
-          processed: false, // Will be set to true by materializeRaw
+          processed: false,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        // Use set with { merge: false } for idempotency:
-        // If a document with this ID already exists, and merge is false, the write will fail.
-        // However, Firestore's batch.set() with merge:false will overwrite if it exists.
-        // For true idempotency at the Firestore level for *new* documents,
-        // we'd need to check existence first or use a transaction.
-        // For now, the unique eventId should prevent most duplicates.
         batch.set(playRef, playData, { merge: false });
       }
 

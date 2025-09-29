@@ -1,11 +1,12 @@
 import * as admin from 'firebase-admin';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { Play, Track, UserTrackAggregate, FraudReason } from '../types'; // Corrected import path
-import { detectSuspiciousPlay } from './reportPlayBatch'; // Re-use basic detection
-
-const db = admin.firestore();
+import { Play, Track, UserTrackAggregate, FraudReason } from '../types';
+import { detectSuspiciousPlay } from './reportPlayBatch';
 
 export const materializeRaw = onDocumentCreated("plays_raw/{yyyymm}/events/{eventId}", async (event) => {
+    // Initialize services inside the function to ensure admin.initializeApp() has run
+    const db = admin.firestore();
+
     const rawPlay = event.data?.data();
     const eventId = event.params.eventId;
     const yyyymm = event.params.yyyymm;
