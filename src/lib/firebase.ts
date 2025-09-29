@@ -45,11 +45,17 @@ if (typeof window !== 'undefined') {
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   console.log('App Check reCAPTCHA Site Key (from env):', recaptchaSiteKey); // Debug log
 
-  if (typeof recaptchaSiteKey !== 'string' || recaptchaSiteKey.trim() === '') {
-    console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not a valid string or is empty. Firebase App Check will not be initialized.');
-    // Ensure appCheckInstance remains undefined if the key is invalid
-    appCheckInstance = undefined; 
-  } else {
+  let finalRecaptchaSiteKey: string | undefined;
+
+  // Ensure it's a string and not empty after trimming
+  if (typeof recaptchaSiteKey === 'string') {
+    const trimmedKey = recaptchaSiteKey.trim();
+    if (trimmedKey.length > 0) {
+      finalRecaptchaSiteKey = trimmedKey;
+    }
+  }
+
+  if (finalRecaptchaSiteKey) {
     if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG === 'true') {
       // @ts-ignore
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
@@ -57,13 +63,16 @@ if (typeof window !== 'undefined') {
 
     try {
       appCheckInstance = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(recaptchaSiteKey), // Now TypeScript knows it's a string here
+        provider: new ReCaptchaV3Provider(finalRecaptchaSiteKey),
         isTokenAutoRefreshEnabled: true,
       });
     } catch (e: any) {
       console.warn('Firebase App Check initialization failed, likely already initialized or an environment issue:', e);
-      appCheckInstance = undefined; // Ensure it's undefined on failure
+      appCheckInstance = undefined;
     }
+  } else {
+    console.warn('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not a valid, non-empty string. Firebase App Check will not be initialized.');
+    appCheckInstance = undefined;
   }
 }
 
