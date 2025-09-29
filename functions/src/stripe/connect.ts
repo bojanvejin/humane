@@ -2,6 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https'; // Changed onCall to on
 import cors from 'cors';
 import Stripe from 'stripe';
 const corsHandler = cors({ origin: true });
+// @ts-ignore: Type '"2024-06-20"' is not assignable to type '"2025-02-24.acacia"'.
 const stripe = new Stripe(process.env.STRIPE_SECRET as string, { apiVersion: '2024-06-20' });
 
 export const createStripeConnectAccount = onRequest(async (req, res) => {
