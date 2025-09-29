@@ -1,9 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { getToken } from '@firebase/app-check'; // Corrected: getToken is from @firebase/app-check
-import { getAppCheck } from 'firebase/app-check'; // Corrected import for getAppCheck
-import app from '@/lib/firebase'; // Corrected import for 'app'
+import { getAppCheck, getToken } from 'firebase/app-check'; // Corrected imports
+import app from '@/lib/firebase';
 
 interface AppCheckContextType {
   appCheckToken: string | null;

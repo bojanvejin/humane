@@ -41,7 +41,9 @@ export const MiniPlayer: React.FC = () => {
         <div className="flex items-center gap-3 min-w-0 flex-grow-0">
           <Avatar className="h-10 w-10 rounded-md">
             <AvatarImage src={currentTrack.coverArtUrl} alt={currentTrack.title} />
-            <AvatarFallback className="rounded-md">{currentTrack.title.substring(0, 2)}</AvatarFallback>
+            <AvatarFallback className="rounded-md">
+              {currentTrack.title ? currentTrack.title.substring(0, 2) : ''}
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-col min-w-0">
             <span className="text-sm font-medium truncate">{currentTrack.title}</span>

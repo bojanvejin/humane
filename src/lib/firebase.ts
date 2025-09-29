@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck } from 'firebase/app-check'; // Corrected import for getAppCheck
+import { initializeAppCheck, ReCaptchaV3Provider, getAppCheck } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -36,7 +36,10 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
     window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
   // Initialize App Check if not already initialized for this app instance
-  if (!getApps().some(app => app.name === 'DEFAULT' && getAppCheck(app, false))) {
+  try {
+    getAppCheck(app); // Try to get an existing instance
+  } catch (e) {
+    // If it throws, it means it's not initialized, so initialize it
     initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
       isTokenAutoRefreshEnabled: true,
