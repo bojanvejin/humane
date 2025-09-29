@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onSchedule } from 'firebase-functions/v2/scheduler'; // Import onSchedule from v2
 
 admin.initializeApp();
 
@@ -12,15 +13,8 @@ export { handleStripeWebhook } from './stripe/webhooks';
 export { createStripeConnectAccount } from './stripe/connect';
 export { processTrackUpload } from './tracks/processTrackUpload';
 
-// Scheduled functions (example, assuming v1 for now or needs v2 conversion)
-// For v2 scheduled functions, you'd use `onSchedule` from `firebase-functions/v2/scheduler`
-export const scheduledUCPSCalculation = functions.pubsub
-  .schedule('0 0 * * *') // Run daily at midnight
-  .timeZone('UTC')
-  .onRun(async (context) => {
-    // This is a v1 function. If converting to v2, it would look like:
-    // import { onSchedule } from 'firebase-functions/v2/scheduler';
-    // export const scheduledUCPSCalculation = onSchedule('0 0 * * *', async (event) => { ... });
-    console.log('Running scheduled UCPS calculation (v1).');
+// Scheduled functions (v2)
+export const scheduledUCPSCalculation = onSchedule('0 0 * * *', async (event) => { // Converted to v2 onSchedule
+    console.log('Running scheduled UCPS calculation (v2).');
     // await calculateUCPSPayouts(); // Uncomment when calculateUCPSPayouts is ready
-  });
+});

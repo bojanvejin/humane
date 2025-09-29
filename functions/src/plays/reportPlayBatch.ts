@@ -71,7 +71,7 @@ export const reportPlayBatch = onRequest(async (req, res) => {
     }
 
     // 3. Extract and hash client IP
-    const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.ip;
+    const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.ip || '0.0.0.0'; // Added '0.0.0.0' fallback
     const hashedIp = hashIpAddress(clientIp, IP_HASH_SALT);
 
     try {
