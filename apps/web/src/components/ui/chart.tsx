@@ -50,14 +50,14 @@ const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerProps>(
 ChartContainer.displayName = "ChartContainer";
 
 // Define ChartLegend
-interface ChartLegendProps extends React.HTMLAttributes<HTMLDivElement> {
-  content?: React.ReactNode;
+interface ChartLegendProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> { // Omit content to avoid conflict
+  legendContent?: React.ReactNode; // Renamed to avoid conflict
 }
 
 const ChartLegend = React.forwardRef<HTMLDivElement, ChartLegendProps>(
-  ({ content, className, ...props }, ref) => (
+  ({ legendContent, className, ...props }, ref) => (
     <div ref={ref} className={cn("flex justify-center gap-4 p-4", className)} {...props}>
-      {content}
+      {legendContent}
     </div>
   )
 );
@@ -87,7 +87,7 @@ interface ChartTooltipProps extends TooltipProps<any, any> {
   hideLabel?: boolean;
 }
 
-const ChartTooltip = ({ content, ...props }: ChartTooltipProps) => {
+const ChartTooltip = ({ ...props }: ChartTooltipProps) => { // Removed content from destructuring
   return (
     <Tooltip
       content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string | number }) => {
