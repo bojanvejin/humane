@@ -1,43 +1,108 @@
 import { onRequest } from 'firebase-functions/v2/https';
+import * as admin from 'firebase-admin';
 import cors from 'cors';
-import { db, FieldValue } from '../firebaseAdmin'; // Import db and FieldValue from our shared admin module
+import { db, FieldValue } from '../firebaseAdmin';
+import { z } from 'zod';
+import { FraudReason } from '../types'; // Import FraudReason
+import { detectSuspiciousPlay } from '../utils/fraudDetection'; // Import fraud detection
 
 const corsHandler = cors({ origin: true });
+
+// Zod schema for a single play event payload
+const PlayEventPayloadSchema = z.object({
+  eventId: z.string().uuid(),
+  trackId: z.string().min(1),
+  sessionId: z.string().uuid(),
+  duration: z.number().int().min(0), // ms played
+  trackFullDurationMs: z.number().int().min(0), // full duration of the track in ms
+  completed: z.boolean(),
+  deviceInfo: z.object({
+    userAgent: z.string().min(1),
+    country: z.string().optional(),
+  }),
+  timestamp: z.string().datetime(), // ISO string
+});
+
+// Zod schema for the entire request body
+const ReportPlayBatchRequestBodySchema = z.object({
+  plays: z.array(PlayEventPayloadSchema).min(1),
+});
 
 export const reportPlayBatch = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
-      res.status(405).json({ error: 'POST only' });
+      res.status(405).json({ error: 'Method Not Allowed', message: 'Only POST requests are accepted.' });
       return;
     }
-    const body = req.body ?? {};
-    if (!Array.isArray(body.plays)) {
-      res.status(400).json({ error: 'Body must be { plays: [] }' });
+
+    // 1. Authenticate user via ID token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized', message: 'No Firebase ID token provided.' });
       return;
     }
+    const idToken = authHeader.split('Bearer ')[1];
+    let decodedToken: admin.auth.DecodedIdToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(idToken);
+    } catch (error) {
+      console.error('Error verifying Firebase ID token:', error);
+      res.status(401).json({ error: 'Unauthorized', message: 'Invalid Firebase ID token.' });
+      return;
+    }
+    const userId = decodedToken.uid;
+
+    // 2. Verify App Check token
+    const appCheckToken = req.headers['x-firebase-appcheck'] as string | undefined;
+    // Only enforce App Check in production environments
+    if (process.env.NODE_ENV === 'production' && !appCheckToken) {
+      res.status(401).json({ error: 'Unauthorized', message: 'App Check token missing.' });
+      return;
+    }
+    if (appCheckToken) {
+      try {
+        await admin.appCheck().verifyToken(appCheckToken);
+      } catch (error) {
+        console.error('Error verifying App Check token:', error);
+        res.status(401).json({ error: 'Unauthorized', message: 'Invalid App Check token.' });
+        return;
+      }
+    }
+
+    // 3. Validate request body using Zod
+    const parseResult = ReportPlayBatchRequestBodySchema.safeParse(req.body);
+    if (!parseResult.success) {
+      console.error('Invalid request body:', parseResult.error.errors);
+      res.status(400).json({ error: 'Bad Request', message: parseResult.error.errors });
+      return;
+    }
+    const { plays } = parseResult.data;
 
     const batch = db.batch();
-    for (let i = 0; i < body.plays.length; i++) {
-      const play = body.plays[i];
-      if (!play?.trackId) {
-        res.status(400).json({ error: `plays[${i}].trackId required` });
-        return;
-      }
-      if (!play?.userId) {
-        res.status(400).json({ error: `plays[${i}].userId required` });
-        return;
-      }
+    const yyyymm = new Date().toISOString().substring(0, 7).replace('-', ''); // YYYYMM format
 
-      const ref = db.collection('plays_raw').doc();
-      batch.set(ref, {
-        trackId: String(play.trackId),
-        userId: String(play.userId),
-        msPlayed: typeof play.msPlayed === 'number' ? play.msPlayed : null,
-        userAgent: req.get('user-agent') ?? null, // Capture user-agent
+    for (const play of plays) {
+      // Initial fraud detection (can be refined in materializeRaw)
+      const { isSuspicious, reasons, fraudScore } = detectSuspiciousPlay({
+        duration: play.duration,
+        trackFullDurationMs: play.trackFullDurationMs,
+        deviceInfo: play.deviceInfo,
+      });
+
+      const rawPlayRef = db.collection('plays_raw').doc(yyyymm).collection('events').doc(play.eventId);
+      batch.set(rawPlayRef, {
+        ...play,
+        userId: userId, // Add userId from authenticated user
+        suspicious: isSuspicious,
+        fraudReasons: reasons.length > 0 ? (reasons as FraudReason[]) : FieldValue.delete(),
+        fraudScore: fraudScore,
+        processed: false, // Mark as not yet processed by materializeRaw
         createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     }
+
     await batch.commit();
-    res.status(200).json({ status: 'ok', wrote: body.plays.length });
+    res.status(200).json({ status: 'ok', wrote: plays.length });
   });
 });
