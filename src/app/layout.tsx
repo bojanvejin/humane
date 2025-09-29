@@ -3,9 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { FirebaseAppCheckProvider } from "@/components/providers/FirebaseAppCheckProvider";
+import { StripeProvider } from "@/components/providers/StripeProvider"; // Import StripeProvider
 import { Toaster } from "@/components/ui/sonner";
-import { PlayerProvider } from "@/components/player/PlayerProvider"; // Import PlayerProvider
-import { MiniPlayer } from "@/components/player/MiniPlayer"; // Import MiniPlayer
+import { PlayerProvider } from "@/components/player/PlayerProvider";
+import { MiniPlayer } from "@/components/player/MiniPlayer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,11 +35,13 @@ export default function RootLayout({
       >
         <FirebaseAppCheckProvider>
           <AuthProvider>
-            <PlayerProvider> {/* Wrap children with PlayerProvider */}
-              {children}
-              <MiniPlayer /> {/* Render MiniPlayer at the root */}
-              <Toaster />
-            </PlayerProvider>
+            <StripeProvider> {/* Wrap with StripeProvider */}
+              <PlayerProvider>
+                {children}
+                <MiniPlayer />
+                <Toaster />
+              </PlayerProvider>
+            </StripeProvider>
           </AuthProvider>
         </FirebaseAppCheckProvider>
       </body>
