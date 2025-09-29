@@ -12,11 +12,12 @@ import { Button, type ButtonProps } from "@/components/ui/button"
 type CarouselContextProps = {
   carouselRef: UseEmblaCarouselType[0]
   api: UseEmblaCarouselType[1]
-  scrollPrev: () => void
   scrollNext: () => void
-  canScrollPrev: boolean
+  scrollPrev: () => void
   canScrollNext: boolean
-} & React.ComponentPropsWithoutRef<typeof Carousel>
+  canScrollPrev: boolean
+  orientation: "horizontal" | "vertical"
+}
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
 
@@ -24,17 +25,18 @@ function useCarousel() {
   const context = React.useContext(CarouselContext)
 
   if (!context) {
-    throw new Error("useCarousel must be used within a <Carousel />")
+    throw new Error("useCarousel must be used within a <Carousel>")
   }
 
   return context
 }
 
-type CarouselProps = {
-  opts?: Parameters<typeof useEmblaCarousel>[0]
-  orientation?: "horizontal" | "vertical"
-  setApi?: (api: UseEmblaCarouselType[1]) => void
-} & React.ComponentPropsWithoutRef<"div">
+type CarouselProps = React.HTMLAttributes<HTMLDivElement> &
+  {
+    opts?: Parameters<typeof useEmblaCarousel>[0]
+    orientation?: "horizontal" | "vertical"
+    setApi?: (api: UseEmblaCarouselType[1]) => void
+  }
 
 const Carousel = React.forwardRef<
   HTMLDivElement,
@@ -42,8 +44,8 @@ const Carousel = React.forwardRef<
 >(
   (
     {
-      opts,
       orientation = "horizontal",
+      opts,
       setApi,
       className,
       children,
@@ -51,13 +53,10 @@ const Carousel = React.forwardRef<
     },
     ref
   ) => {
-    const [carouselRef, api] = useEmblaCarousel(
-      {
-        ...opts,
-        axis: orientation === "horizontal" ? "x" : "y",
-      },
-      []
-    )
+    const [carouselRef, api] = useEmblaCarousel({
+      ...opts,
+      axis: orientation === "horizontal" ? "x" : "y",
+    })
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
@@ -92,14 +91,10 @@ const Carousel = React.forwardRef<
         return
       }
 
-      setApi?.(api)
-      api.on("select", onSelect)
+      onSelect(api)
       api.on("reInit", onSelect)
-
-      return () => {
-        api.off("select", onSelect)
-        api.off("reInit", onSelect)
-      }
+      api.on("select", onSelect)
+      setApi?.(api)
     }, [api, onSelect, setApi])
 
     return (
@@ -107,38 +102,49 @@ const Carousel = React.forwardRef<
         value={{
           carouselRef,
           api: api,
-          scrollPrev,
           scrollNext,
-          canScrollPrev,
+          scrollPrev,
           canScrollNext,
-          orientation,
-          ...props,
+          canScrollPrev,
+          orientation:
+            orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
         }}
       >
         <div
           ref={ref}
-          onKeyDownCapture={handleKeyDown}
+          onKeyDown={handleKeyDown}
           className={cn("relative", className)}
-          role="region"
-          aria-roledescription="carousel"
           {...props}
         >
-          <div ref={carouselRef} className="overflow-hidden">
-            <div
-              className={cn(
-                "flex",
-                orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col"
-              )}
-            >
-              {children}
-            </div>
-          </div>
+          {children}
         </div>
       </CarouselContext.Provider>
     )
   }
 )
 Carousel.displayName = "Carousel"
+
+const CarouselContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  const { carouselRef, orientation } = useCarousel()
+
+  return (
+    <div ref={carouselRef} className="overflow-hidden">
+      <div
+        ref={ref}
+        className={cn(
+          "flex",
+          orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
+          className
+        )}
+        {...props}
+      />
+    </div>
+  )
+})
+CarouselContent.displayName = "CarouselContent"
 
 const CarouselItem = React.forwardRef<
   HTMLDivElement,

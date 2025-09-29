@@ -7,26 +7,20 @@ import { PanelLeft } from "lucide-react"
 
 import { cn } from "@humane/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetOverlay,
-  SheetPortal,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetOverlay, SheetPortal, SheetTrigger } from "@/components/ui/sheet" // Import Sheet components
 
 const sidebarVariants = cva(
-  "flex h-full flex-col overflow-hidden bg-sidebar text-sidebar-foreground",
+  "flex h-full flex-col overflow-hidden border-r bg-sidebar text-sidebar-foreground",
   {
     variants: {
       variant: {
-        default: "border-r border-sidebar-border",
-        ghost: "",
+        default: "bg-sidebar",
+        primary: "bg-sidebar-primary text-sidebar-primary-foreground",
       },
       size: {
         default: "w-64",
-        collapsed: "w-14",
+        sm: "w-48",
+        lg: "w-80",
       },
     },
     defaultVariants: {
@@ -40,63 +34,59 @@ export interface SidebarProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sidebarVariants> {
   asChild?: boolean
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  trigger?: React.ReactNode
+  trigger?: React.ReactNode // Optional trigger element for mobile
+  children?: React.ReactNode
 }
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      asChild = false,
-      open,
-      onOpenChange,
-      trigger,
-      children,
-      ...props
-    },
-    ref
-  ) => {
+  ({ className, variant, size, asChild = false, trigger, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "div"
 
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
-        <SheetPortal>
-          <SheetOverlay />
-          <SheetContent
-            side="left"
-            className={cn(sidebarVariants({ variant, size, className }))}
-            {...props}
-            ref={ref}
-          >
-            {children}
-          </SheetContent>
-        </SheetPortal>
-      </Sheet>
+      <>
+        {/* Mobile Sidebar Trigger */}
+        <div className="md:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              {trigger || (
+                <Button
+                  data-sidebar="trigger"
+                  variant="ghost" // Ensure variant is passed
+                  size="icon" // Ensure size is passed
+                  className="fixed left-4 top-4 z-50 md:hidden"
+                >
+                  <PanelLeft className="h-5 w-5" />
+                  <span className="sr-only">Toggle Sidebar</span>
+                </Button>
+              )}
+            </SheetTrigger>
+            <SheetContent
+              side="left"
+              className={cn(
+                "p-0", // Remove default padding from SheetContent
+                sidebarVariants({ variant, size, className })
+              )}
+            >
+              {children}
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <Comp
+          ref={ref}
+          className={cn(
+            "hidden md:flex", // Hide on mobile, show on desktop
+            sidebarVariants({ variant, size, className })
+          )}
+          {...props}
+        >
+          {children}
+        </Comp>
+      </>
     )
   }
 )
 Sidebar.displayName = "Sidebar"
 
-const SidebarTrigger = React.forwardRef<
-  HTMLButtonElement,
-  ButtonProps
->(({ className, ...props }, ref) => (
-  <Button
-    ref={ref}
-    variant="ghost" // Ensure variant is passed
-    size="icon" // Ensure size is passed
-    className={cn("h-8 w-8", className)}
-    {...props}
-  >
-    <PanelLeft className="h-4 w-4" />
-    <span className="sr-only">Toggle Sidebar</span>
-  </Button>
-))
-SidebarTrigger.displayName = "SidebarTrigger"
-
-export { Sidebar, SidebarTrigger, sidebarVariants }
+export { Sidebar, sidebarVariants }

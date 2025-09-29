@@ -13,7 +13,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   type TooltipProps,
 } from 'recharts';
 import {
@@ -23,10 +22,11 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart" // Assuming this is the correct path for your chart components
+
 import { cn } from "@humane/lib/utils"
 
-// Helper to safely convert value to string for tickFormatter
+// Helper function to safely convert value to string
 const safeToString = (value: unknown): string => {
   if (typeof value === 'number' || typeof value === 'string') {
     return String(value);
@@ -34,74 +34,73 @@ const safeToString = (value: unknown): string => {
   return '';
 };
 
-interface ChartProps extends React.HTMLAttributes<HTMLDivElement> {
+// Define the props for the Chart component
+interface ChartComponentProps extends React.HTMLAttributes<HTMLDivElement> {
   config: ChartConfig;
-  children: React.ReactNode;
+  data: Record<string, any>[];
+  chartType?: "line" | "bar" | "area";
+  className?: string;
 }
 
-const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
-  ({ config, children, className, ...props }, ref) => {
-    const chartProps = React.useMemo(() => {
-      const chartValues = Object.values(config).filter(
-        (entry) => entry.type === "value"
-      )
-      if (!chartValues.length) return null
+const Chart: React.FC<ChartComponentProps> = ({
+  config,
+  data,
+  chartType = "line",
+  className,
+  ...props
+}) => {
+  const ChartComponent =
+    chartType === "line" ? LineChart : chartType === "bar" ? BarChart : AreaChart;
+  const ChartElement =
+    chartType === "line" ? Line : chartType === "bar" ? Bar : Area;
 
-      const content = chartValues[0]?.content
-      if (typeof content !== "function") return null
-
-      return {
-        content,
-        formatter: chartValues[0]?.formatter,
-      }
-    }, [config])
-
-    const hasData = React.Children.toArray(children).some((child) => {
-      if (React.isValidElement(child) && "data" in child.props) {
-        return Array.isArray(child.props.data) && child.props.data.length > 0
-      }
-      return false
-    })
-
-    return (
-      <div
-        ref={ref}
-        className={cn("flex h-[400px] w-full flex-col", className)}
-        {...props}
+  return (
+    <ChartContainer config={config} className={cn("min-h-[200px] w-full", className)} {...props}>
+      <ChartComponent
+        accessibilityLayer
+        data={data}
+        margin={{
+          left: 12,
+          right: 12,
+        }}
       >
-        <ChartContainer config={config} className="h-full w-full">
-          {children}
-          {hasData && (
-            <>
-              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel formatter={chartProps?.formatter} />} />
-              <ChartLegend content={<ChartLegendContent />} />
-            </>
-          )}
-        </ChartContainer>
-      </div>
-    )
-  }
-)
-Chart.displayName = "Chart"
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey={Object.keys(config).find(key => config[key].axis === 'x')}
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tickFormatter={(value: any) => safeToString(value)} // Added type annotation here
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(value: any) => safeToString(value)} // Added type annotation here
+        />
+        <ChartTooltip
+          cursor={false}
+          content={<ChartTooltipContent hideLabel />}
+        />
+        <ChartLegend content={<ChartLegendContent />} />
+        {Object.entries(config).map(([key, { label, color, type }]) => {
+          if (type === chartType) {
+            return (
+              <ChartElement
+                key={key}
+                dataKey={key}
+                name={label}
+                stroke={color}
+                fill={color}
+                dot={false}
+                activeDot={{ r: 6 }}
+              />
+            );
+          }
+          return null;
+        })}
+      </ChartComponent>
+    </ChartContainer>
+  );
+};
 
-export {
-  Chart,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  safeToString, // Export safeToString
-}
+export { Chart };

@@ -17,7 +17,7 @@ Pagination.displayName = "Pagination"
 
 const PaginationContent = React.forwardRef<
   HTMLUListElement,
-  React.ComponentProps<"ul">
+  React.ComponentPropsWithoutRef<"ul">
 >(({ className, ...props }, ref) => (
   <ul
     ref={ref}
@@ -29,7 +29,7 @@ PaginationContent.displayName = "PaginationContent"
 
 const PaginationItem = React.forwardRef<
   HTMLLIElement,
-  React.ComponentProps<"li">
+  React.ComponentPropsWithoutRef<"li">
 >(({ className, ...props }, ref) => (
   <li ref={ref} className={cn("", className)} {...props} />
 ))
@@ -37,8 +37,8 @@ PaginationItem.displayName = "PaginationItem"
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<ButtonProps, "size"> &
-  React.ComponentPropsWithoutRef<typeof Link>
+} & Pick<ButtonProps, "size"> & // Removed "variant" from Pick as it's explicitly set below
+  React.ComponentPropsWithoutRef<typeof Link> // Use Link for navigation
 
 const PaginationLink = ({
   className,
@@ -60,42 +60,44 @@ const PaginationLink = ({
 )
 PaginationLink.displayName = "PaginationLink"
 
-const PaginationPrevious = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink
+const PaginationPrevious = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentPropsWithoutRef<typeof Button>
+>(({ className, ...props }, ref) => (
+  <Button
+    ref={ref}
     aria-label="Go to previous page"
-    size="default"
+    size="default" // Explicitly set size here
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
     <span>Previous</span>
-  </PaginationLink>
-)
+  </Button>
+))
 PaginationPrevious.displayName = "PaginationPrevious"
 
-const PaginationNext = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink
+const PaginationNext = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentPropsWithoutRef<typeof Button>
+>(({ className, ...props }, ref) => (
+  <Button
+    ref={ref}
     aria-label="Go to next page"
-    size="default"
+    size="default" // Explicitly set size here
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >
     <span>Next</span>
     <ChevronRight className="h-4 w-4" />
-  </PaginationLink>
-)
+  </Button>
+))
 PaginationNext.displayName = "PaginationNext"
 
 const PaginationEllipsis = ({
   className,
   ...props
-}: React.ComponentProps<"span">) => (
+}: React.ComponentProps<typeof MoreHorizontal>) => (
   <span
     aria-hidden
     className={cn("flex h-9 w-9 items-center justify-center", className)}
