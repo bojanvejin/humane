@@ -41,6 +41,14 @@ interface ChartProps {
   height?: number;
 }
 
+// Helper function to safely convert a value to string, handling null/undefined
+const safeToString = (value: any): string => {
+  if (value == null) {
+    return ''; // Return empty string for null or undefined
+  }
+  return String(value);
+};
+
 const Chart: React.FC<ChartProps> = ({
   data,
   config,
@@ -51,24 +59,33 @@ const Chart: React.FC<ChartProps> = ({
   // Use TooltipProps<any, any> directly for type compatibility
   const renderTooltipContent = (props: TooltipProps<any, any>) => {
     if (props.active && props.payload && props.payload.length) {
-      const item = props.payload[0] as PayloadItem;
+      // Ensure the first payload item exists and is not null/undefined
+      const firstPayloadItem = props.payload[0];
+      if (firstPayloadItem == null) {
+        console.warn("Chart Tooltip: First payload item is null or undefined. Skipping tooltip content.");
+        return null;
+      }
+      
+      const item = firstPayloadItem as PayloadItem;
       
       // Safely get dataKey for the first item
       const initialDataKey = item.dataKey;
-      if (initialDataKey == null) return null; // If the primary dataKey is null/undefined, don't render tooltip
-      const dataKey = String(initialDataKey); // Convert to string
-
-      const { format } = config[dataKey] || {};
-      const value = item.value;
-      const formattedValue = format ? format(value as number) : value;
+      // If the primary dataKey is null/undefined, don't render tooltip
+      if (initialDataKey == null) {
+        console.warn("Chart Tooltip: First payload item's dataKey is null or undefined. Skipping tooltip content.");
+        return null;
+      }
+      const dataKey = safeToString(initialDataKey); // Use safeToString
 
       return (
         <div className="rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
-          <p className="text-sm font-medium">{props.label}</p>
-          {props.payload.map((payloadItem: PayloadItem, index: number) => {
+          <p className="text-sm font-medium">{safeToString(props.label)}</p> {/* Use safeToString for label */}
+          {props.payload.map((payloadItem: PayloadItem | null | undefined, index: number) => { // Allow null/undefined payload items
+            if (payloadItem == null) return null; // Check if the item itself is null/undefined
+
             const currentPayloadDataKey = payloadItem.dataKey;
             if (currentPayloadDataKey == null) return null; // Skip this payload item if its dataKey is null/undefined
-            const key = String(currentPayloadDataKey); // Convert to string
+            const key = safeToString(currentPayloadDataKey); // Use safeToString
 
             const itemConfig = config[key];
             if (!itemConfig) return null;
