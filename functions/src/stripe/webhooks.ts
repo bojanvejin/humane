@@ -1,4 +1,4 @@
-import { onRequest } from 'firebase-functions/v2/https';
+import { onRequest, Request, Response } from 'firebase-functions/v2/https'; // Added Request, Response types
 import cors from 'cors';
 import Stripe from 'stripe';
 import { db } from '../firebaseAdmin'; // Import db from our shared admin module
@@ -7,7 +7,7 @@ const corsHandler = cors({ origin: true });
 // @ts-ignore: Type '"2024-06-20"' is not assignable to type '"2025-02-24.acacia"'.
 const stripe = new Stripe(process.env.STRIPE_SECRET as string, { apiVersion: '2024-06-20' });
 
-export const stripeWebhooks = onRequest(async (req, res) => {
+export const stripeWebhooks = onRequest(async (req: Request, res: Response) => { // Explicitly typed req and res
   return corsHandler(req, res, async () => {
     const sig = req.headers['stripe-signature'] as string;
     let event;

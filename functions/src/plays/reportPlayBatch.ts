@@ -1,4 +1,4 @@
-import { onRequest } from 'firebase-functions/v2/https';
+import { onRequest, Request, Response } from 'firebase-functions/v2/https'; // Added Request, Response types
 import * as admin from 'firebase-admin';
 import cors from 'cors';
 import { db, FieldValue } from '../firebaseAdmin';
@@ -19,7 +19,7 @@ const PlayEventPayloadSchema = z.object({
   completed: z.boolean(),
   deviceInfo: z.object({
     userAgent: z.string().min(1),
-    country: z.string().optional(),
+        country: z.string().optional(),
   }),
   timestamp: z.string().datetime(), // ISO string
 });
@@ -29,7 +29,7 @@ const ReportPlayBatchRequestBodySchema = z.object({
   plays: z.array(PlayEventPayloadSchema).min(1),
 });
 
-export const reportPlayBatch = onRequest(async (req, res) => {
+export const reportPlayBatch = onRequest(async (req: Request, res: Response) => { // Explicitly typed req and res
   return corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed', message: 'Only POST requests are accepted.' });

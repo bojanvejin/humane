@@ -15,16 +15,116 @@ import {
   Tooltip,
   type TooltipProps,
 } from 'recharts';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart" // Assuming this is the correct path for your chart components
-
 import { cn } from "@humane/lib/utils"
+
+// Define ChartConfig type
+export type ChartConfig = {
+  [k: string]: {
+    label?: string;
+    color?: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    type?: "line" | "bar" | "area";
+    axis?: "x" | "y";
+  };
+};
+
+// Define ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent
+// These are simplified versions based on common Shadcn/UI patterns.
+// In a full Shadcn/UI setup, these would typically be imported from a dedicated file.
+
+interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  config: ChartConfig;
+  children: React.ReactNode;
+}
+
+const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerProps>(
+  ({ config, className, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("flex flex-col items-center justify-center", className)}
+      {...props}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        {children}
+      </ResponsiveContainer>
+    </div>
+  )
+);
+ChartContainer.displayName = "ChartContainer";
+
+interface ChartLegendProps extends React.HTMLAttributes<HTMLDivElement> {
+  content?: React.ReactNode;
+}
+
+const ChartLegend = React.forwardRef<HTMLDivElement, ChartLegendProps>(
+  ({ content, className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex justify-center gap-4 p-4", className)} {...props}>
+      {content}
+    </div>
+  )
+);
+ChartLegend.displayName = "ChartLegend";
+
+interface ChartLegendContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  config?: ChartConfig;
+}
+
+const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendContentProps>(
+  ({ config, className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex gap-2", className)} {...props}>
+      {config && Object.entries(config).map(([key, { label, color }]) => (
+        <div key={key} className="flex items-center gap-1">
+          <span className={cn("h-3 w-3 rounded-full", color)} style={{ backgroundColor: color }} />
+          <span className="text-sm text-muted-foreground">{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+);
+ChartLegendContent.displayName = "ChartLegendContent";
+
+interface ChartTooltipProps extends TooltipProps<any, any> {
+  hideLabel?: boolean;
+}
+
+const ChartTooltip = ({ content, ...props }: ChartTooltipProps) => {
+  return (
+    <Tooltip
+      content={({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+          return (
+            <div className="rounded-lg border bg-background p-2 text-sm shadow-md">
+              {props.hideLabel ? null : <div className="font-medium">{label}</div>}
+              {payload.map((entry, index) => (
+                <div key={`item-${index}`} className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">{entry.name}:</span>
+                  <span className="font-medium">{entry.value}</span>
+                </div>
+              ))}
+            </div>
+          );
+        }
+        return null;
+      }}
+      {...props}
+    />
+  );
+};
+ChartTooltip.displayName = "ChartTooltip";
+
+interface ChartTooltipContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  hideLabel?: boolean;
+}
+
+const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContentProps>(
+  ({ hideLabel, className, ...props }, ref) => (
+    <div ref={ref} className={cn("rounded-lg border bg-background p-2 text-sm shadow-md", className)} {...props}>
+      {/* Content will be rendered by Recharts Tooltip's formatter */}
+    </div>
+  )
+);
+ChartTooltipContent.displayName = "ChartTooltipContent";
+
 
 // Helper function to safely convert value to string
 const safeToString = (value: unknown): string => {
@@ -66,22 +166,22 @@ const Chart: React.FC<ChartComponentProps> = ({
       >
         <CartesianGrid vertical={false} />
         <XAxis
-          dataKey={Object.keys(config).find(key => config[key].axis === 'x')}
+          dataKey={Object.keys(config).find(key => config[key]?.axis === 'x')}
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value: any) => safeToString(value)} // Added type annotation here
+          tickFormatter={(value: any) => safeToString(value)}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value: any) => safeToString(value)} // Added type annotation here
+          tickFormatter={(value: any) => safeToString(value)}
         />
         <ChartTooltip
           cursor={false}
           content={<ChartTooltipContent hideLabel />}
         />
-        <ChartLegend content={<ChartLegendContent />} />
+        <ChartLegend content={<ChartLegendContent config={config} />} />
         {Object.entries(config).map(([key, { label, color, type }]) => {
           if (type === chartType) {
             return (
@@ -103,4 +203,4 @@ const Chart: React.FC<ChartComponentProps> = ({
   );
 };
 
-export { Chart };
+export { Chart, ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent };

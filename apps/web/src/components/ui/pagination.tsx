@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@humane/lib/utils"
-import { ButtonProps, buttonVariants } from "@/components/ui/button"
+import { Button, ButtonProps, buttonVariants } from "@/components/ui/button" // Added Button and buttonVariants import
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
@@ -37,13 +37,14 @@ PaginationItem.displayName = "PaginationItem"
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<ButtonProps, "size"> & // Removed "variant" from Pick as it's explicitly set below
-  React.ComponentPropsWithoutRef<typeof Link> // Use Link for navigation
+} & Pick<ButtonProps, "size" | "variant"> & // Added "variant" to Pick
+  React.ComponentPropsWithoutRef<typeof Link>
 
 const PaginationLink = ({
   className,
   isActive,
   size = "icon",
+  variant, // Destructure variant
   ...props
 }: PaginationLinkProps) => (
   <Link
@@ -67,7 +68,7 @@ const PaginationPrevious = React.forwardRef<
   <Button
     ref={ref}
     aria-label="Go to previous page"
-    size="default" // Explicitly set size here
+    size="default"
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
@@ -84,7 +85,7 @@ const PaginationNext = React.forwardRef<
   <Button
     ref={ref}
     aria-label="Go to next page"
-    size="default" // Explicitly set size here
+    size="default"
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >

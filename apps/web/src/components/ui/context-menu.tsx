@@ -14,6 +14,8 @@ const ContextMenuPortal = ContextMenuPrimitive.Portal
 
 const ContextMenuSub = ContextMenuPrimitive.Sub
 
+const ContextMenuGroup = ContextMenuPrimitive.Group // Added ContextMenuGroup
+
 const ContextMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
@@ -184,7 +186,7 @@ export {
   ContextMenuItem,
   ContextMenuCheckboxItem,
   ContextMenuRadioItem,
-  ContextMenuGroup,
+  ContextMenuGroup, // Exported ContextMenuGroup
   ContextMenuLabel,
   ContextMenuSeparator,
   ContextMenuShortcut,
