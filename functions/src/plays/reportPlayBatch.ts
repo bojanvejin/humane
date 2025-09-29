@@ -6,11 +6,13 @@ const db = admin.firestore();
 
 // Validation schema for play batch
 const PlayBatchSchema = z.object({
+  token: z.string(), // Placeholder for signed token
   plays: z.array(z.object({
     trackId: z.string(),
-    userId: z.string(),
+    userId: z.string(), // This should ideally come from context.auth.uid for security
     sessionId: z.string(),
-    duration: z.number().min(0),
+    duration: z.number().min(0), // Duration of the actual listen in ms
+    trackFullDurationMs: z.number().min(1), // Full duration of the track in ms
     completed: z.boolean(),
     deviceInfo: z.object({
       userAgent: z.string(),
@@ -27,6 +29,18 @@ export const reportPlayBatch = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
   }
 
+  // Placeholder for signed token validation
+  // In a real scenario, 'data.token' would be a JWT signed by the client
+  // and verified here to ensure play events haven't been tampered with.
+  // For MVP, we'll just check if it's present.
+  if (!data.token || data.token.length < 10) { // Basic check for token presence
+    throw new functions.https.HttpsError('unauthenticated', 'Invalid or missing play token.');
+  }
+
+  // Ensure the userId in the play events matches the authenticated user's UID
+  // This prevents users from reporting plays for other users.
+  const authenticatedUserId = context.auth.uid;
+
   try {
     // Validate input
     const validatedData = PlayBatchSchema.parse(data);
@@ -34,12 +48,15 @@ export const reportPlayBatch = functions.https.onCall(async (data, context) => {
     const suspiciousPlays: string[] = [];
 
     for (const play of validatedData.plays) {
+      if (play.userId !== authenticatedUserId) {
+        throw new functions.https.HttpsError('permission-denied', 'Cannot report plays for another user.');
+      }
+
       const playId = `${play.sessionId}_${play.trackId}_${new Date(play.timestamp).getTime()}`;
       const playRef = db.collection('plays_raw').doc(playId);
       
       // Fraud detection rules
-      const isSuspicious = detectSuspiciousPlay(play);
-      const fraudReasons = isSuspicious ? checkFraudReasons(play) : [];
+      const { isSuspicious, reasons } = detectSuspiciousPlay(play);
 
       if (isSuspicious) {
         suspiciousPlays.push(playId);
@@ -49,8 +66,8 @@ export const reportPlayBatch = functions.https.onCall(async (data, context) => {
         ...play,
         id: playId,
         suspicious: isSuspicious,
-        fraudReasons,
-        processed: false,
+        fraudReasons: reasons,
+        processed: false, // Will be set to true by materializeRaw
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
@@ -65,46 +82,53 @@ export const reportPlayBatch = functions.https.onCall(async (data, context) => {
       suspicious: suspiciousPlays.length,
       suspiciousPlayIds: suspiciousPlays,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Play batch error:', error);
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid play data');
+    if (error instanceof z.ZodError) {
+      throw new functions.https.HttpsError('invalid-argument', 'Invalid play data format.', error.errors);
+    }
+    if (error.code === 'permission-denied' || error.code === 'unauthenticated') {
+      throw error; // Re-throw specific HttpsErrors
+    }
+    throw new functions.https.HttpsError('internal', 'Failed to report play batch.', error.message);
   }
 });
 
-function detectSuspiciousPlay(play: any): boolean {
-  // Minimum 20 seconds or 50% of track duration rule
-  const trackDuration = 180; // TODO: Fetch actual track duration from Firestore
-  const minDuration = Math.min(20, trackDuration * 0.5);
-  
-  if (play.duration < minDuration) {
-    return true;
-  }
-
-  // Additional fraud signals
-  if (play.deviceInfo.userAgent.includes('bot')) return true;
-  if (play.deviceInfo.ipAddress === '127.0.0.1') return true;
-  
-  // High frequency detection (would need session tracking)
-  // TODO: Implement session-based frequency checks
-
-  return false;
+interface PlayEventData {
+  duration: number; // ms played
+  trackFullDurationMs: number; // full track duration
+  deviceInfo: {
+    userAgent: string;
+    ipAddress: string;
+  };
 }
 
-function checkFraudReasons(play: any): string[] {
+export function detectSuspiciousPlay(play: PlayEventData): { isSuspicious: boolean; reasons: string[] } {
   const reasons: string[] = [];
-  const trackDuration = 180; // TODO: Fetch actual track duration
-  
-  if (play.duration < Math.min(20, trackDuration * 0.5)) {
+  let isSuspicious = false;
+
+  // Rule 1: Minimum 20 seconds (20000ms) or 50% of track duration
+  const minListenDurationMs = Math.min(20000, play.trackFullDurationMs * 0.5);
+  if (play.duration < minListenDurationMs) {
     reasons.push('insufficient_listen_duration');
-  }
-  
-  if (play.deviceInfo.userAgent.includes('bot')) {
-    reasons.push('bot_user_agent');
-  }
-  
-  if (play.deviceInfo.ipAddress === '127.0.0.1') {
-    reasons.push('local_ip_address');
+    isSuspicious = true;
   }
 
-  return reasons;
+  // Rule 2: Bot user agent detection
+  if (play.deviceInfo.userAgent.toLowerCase().includes('bot')) {
+    reasons.push('bot_user_agent');
+    isSuspicious = true;
+  }
+
+  // Rule 3: Local IP address detection
+  if (play.deviceInfo.ipAddress === '127.0.0.1' || play.deviceInfo.ipAddress === '::1') {
+    reasons.push('local_ip_address');
+    isSuspicious = true;
+  }
+  
+  // TODO: Implement session-based frequency checks and other heuristics in materializeRaw
+  // For now, reportPlayBatch does basic checks. More complex fraud detection
+  // will happen in materializeRaw after fetching full track data and user history.
+
+  return { isSuspicious, reasons };
 }

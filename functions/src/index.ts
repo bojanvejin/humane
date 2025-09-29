@@ -5,6 +5,7 @@ admin.initializeApp();
 
 // Export all functions
 export { reportPlayBatch } from './plays/reportPlayBatch';
+export { materializeRaw } from './plays/materializeRaw'; // New
 export { calculateUCPSPayouts } from './payouts/calculateUCPSPayouts';
 export { handleStripeWebhook } from './stripe/webhooks';
 export { createStripeConnectAccount } from './stripe/connect';
