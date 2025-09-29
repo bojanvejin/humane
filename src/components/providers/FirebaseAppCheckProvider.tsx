@@ -1,0 +1,77 @@
+'use client';
+
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { initializeAppCheck, ReCaptchaV3Provider, getToken } from '@firebase/app-check';
+import { app } from '@/lib/firebase'; // Your Firebase app instance
+
+interface AppCheckContextType {
+  appCheckToken: string | null;
+  loading: boolean;
+  refreshAppCheckToken: () => Promise<void>;
+}
+
+const AppCheckContext = createContext<AppCheckContextType | undefined>(undefined);
+
+export const useAppCheckContext = () => {
+  const context = useContext(AppCheckContext);
+  if (context === undefined) {
+    throw new Error('useAppCheckContext must be used within a FirebaseAppCheckProvider');
+  }
+  return context;
+};
+
+interface FirebaseAppCheckProviderProps {
+  children: ReactNode;
+}
+
+export const FirebaseAppCheckProvider: React.FC<FirebaseAppCheckProviderProps> = ({ children }) => {
+  const [appCheckToken, setAppCheckToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refreshAppCheckToken = async () => {
+    setLoading(true);
+    try {
+      const { token } = await getToken(initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!),
+        is
+      }));
+      setAppCheckToken(token);
+    } catch (error) {
+      console.error('Error refreshing App Check token:', error);
+      setAppCheckToken(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+      // Pass your reCAPTCHA v3 site key here:
+      const appCheckInstance = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: true, // Enable auto-refresh.
+      });
+
+      // Get the initial token
+      getToken(appCheckInstance, true)
+        .then(({ token }) => {
+          setAppCheckToken(token);
+        })
+        .catch((error) => {
+          console.error('Error getting initial App Check token:', error);
+          setAppCheckToken(null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  return (
+    <AppCheckContext.Provider value={{ appCheckToken, loading, refreshAppCheckToken }}>
+      {children}
+    </AppCheckContext.Provider>
+  );
+};

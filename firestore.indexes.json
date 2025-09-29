@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "plays",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASC" },
+        { "fieldPath": "createdAt", "order": "DESC" }
+      ]
+    },
+    {
+      "collectionGroup": "plays",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "trackId", "order": "ASC" },
+        { "fieldPath": "createdAt", "order": "DESC" }
+      ]
+    },
+    {
+      "collectionGroup": "plays",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "artistIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "createdAt", "order": "DESC" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

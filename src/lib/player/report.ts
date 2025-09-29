@@ -1,26 +1,25 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase'; // Assuming firebase.ts exports 'app'
+import { generateUuid } from '@/lib/utils/security'; // Import generateUuid
 
-const functions = getFunctions(app);
-const reportPlayBatchCallable = httpsCallable(functions, 'reportPlayBatch');
+// Define the endpoint for the Cloud Function
+const REPORT_PLAY_BATCH_ENDPOINT = 'http://localhost:5001/humane-io/us-central1/reportPlayBatch'; // Adjust for production
 
 interface PlayEvent {
   trackId: string;
-  userId: string;
-  sessionId: string;
+  sessionId: string; // Client-generated UUID
   duration: number; // ms played
   trackFullDurationMs: number; // full duration of the track in ms
   completed: boolean;
   deviceInfo: {
     userAgent: string;
-    ipAddress: string; // This should ideally be determined server-side or from a trusted source
+    // ipAddress is determined server-side
     country?: string;
   };
   timestamp: string; // ISO string
 }
 
-export async function reportPlayBatchToFunction(plays: PlayEvent[]) {
+export async function reportPlayBatchToFunction(plays: Omit<PlayEvent, 'sessionId'>[]) {
   const auth = getAuth(app);
   const currentUser = auth.currentUser;
 
@@ -29,13 +28,37 @@ export async function reportPlayBatchToFunction(plays: PlayEvent[]) {
     throw new Error('Authentication required to report plays.');
   }
 
-  // For MVP, a simple token derived from UID. In production, this would be a securely signed JWT.
-  const token = `HUMANE_PLAY_TOKEN_${currentUser.uid}`; 
+  const idToken = await currentUser.getIdToken();
+  const appCheckToken = await getAppCheckToken(); // Get App Check token
+
+  // Generate a single sessionId for the entire batch if not already present in individual plays
+  const batchSessionId = generateUuid();
+
+  const playsWithSessionId: PlayEvent[] = plays.map(play => ({
+    ...play,
+    sessionId: batchSessionId, // Assign the generated session ID
+  }));
 
   try {
-    const result = await reportPlayBatchCallable({ token, plays });
-    console.log('Play batch reported successfully:', result.data);
-    return result.data;
+    const response = await fetch(REPORT_PLAY_BATCH_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+        'X-Firebase-AppCheck': appCheckToken || '', // Include App Check token
+      },
+      body: JSON.stringify({ plays: playsWithSessionId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error reporting play batch:', errorData);
+      throw new Error(errorData.message || 'Failed to report play batch.');
+    }
+
+    const result = await response.json();
+    console.log('Play batch reported successfully:', result);
+    return result;
   } catch (error) {
     console.error('Error reporting play batch:', error);
     throw error;
@@ -46,10 +69,15 @@ export async function reportPlayBatchToFunction(plays: PlayEvent[]) {
 export function getDeviceInfo() {
   return {
     userAgent: navigator.userAgent,
-    // WARNING: IP address from client-side is unreliable and can be spoofed.
-    // For robust fraud detection, IP should be determined server-side.
-    // For MVP, we'll send a placeholder or a public IP if available.
-    ipAddress: '0.0.0.0', // Placeholder, replace with actual IP if available or fetch server-side
     country: undefined, // Can be determined via IP lookup server-side
   };
+}
+
+// Placeholder for App Check token retrieval
+// This will be properly implemented with Firebase App Check SDK
+async function getAppCheckToken(): Promise<string | undefined> {
+  // TODO: Implement actual App Check token retrieval using firebase/app-check
+  // For now, return a placeholder or undefined
+  console.warn('App Check token retrieval not fully implemented. Returning placeholder.');
+  return 'fake-app-check-token'; 
 }

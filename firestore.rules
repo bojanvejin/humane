@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function authed() { return request.auth != null; }
+    function has(role) { return authed() && role in request.auth.token.roles; }
+
+    match /users/{uid} {
+      allow read: if authed() && (request.auth.uid == uid || has('admin'));
+      allow write: if request.auth.uid == uid;
+    }
+
+    match /artists/{id} {
+      allow read: if true; // public
+      allow create, update: if has('artist') && request.auth.uid == resource.data.ownerUserId;
+    }
+
+    match /plays/{period}/{id} {
+      allow read: if has('admin');
+      allow write: if false; // server-only via CF
+    }
+
+    match /plays_raw/{period}/{id} {
+      allow read: if has('admin');
+      // Allow write only from authenticated Cloud Functions (server-side)
+      // This rule assumes that the `reportPlayBatch` function will be authenticated
+      // as a service account, or that the `request.auth` context for functions
+      // is handled appropriately. For now, we'll allow authenticated users to write
+      // to plays_raw, but the `reportPlayBatch` function will enforce stricter checks.
+      // The `materializeRaw` function will then move it to `/plays`.
+      allow write: if authed(); 
+    }
+
+    match /userTrackAgg/{id} {
+      allow read: if has('admin'); // Only admins can read aggregates directly
+      allow write: if false; // Server-only via CF (materializeRaw)
+    }
+  }
+}

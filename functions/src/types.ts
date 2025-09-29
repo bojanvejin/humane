@@ -1,6 +1,17 @@
 // This file is a copy of src/types/index.ts to ensure Firebase Functions are self-contained
 // and don't rely on the Next.js app's module resolution.
 // In a monorepo setup, this would ideally be a shared package.
+import * as admin from 'firebase-admin';
+
+export type FraudReason = 
+  'insufficient_listen_duration' | 
+  'bot_user_agent' | 
+  'local_ip_address' | 
+  'duplicate_play_within_window' |
+  'track_not_found' |
+  'new_user_burst' |
+  'device_multiple_accounts' |
+  'ip_cluster';
 
 export interface User {
   id: string;
@@ -86,10 +97,11 @@ export interface Play {
   duration: number; // seconds listened
   completed: boolean;
   suspicious: boolean;
-  fraudReasons?: string[];
+  fraudReasons?: FraudReason[];
+  fraudScore: number; // 0-1
   deviceInfo: {
     userAgent: string;
-    ipAddress: string;
+    ipAddress: string; // Hashed IP
     country?: string;
   };
   timestamp: Date;
@@ -148,4 +160,13 @@ export interface FanReceipt {
   }[];
   timestamp: Date;
   stripePaymentIntentId: string;
+}
+
+export interface UserTrackAggregate {
+  userId: string;
+  trackId: string;
+  lastPlayAt: admin.firestore.Timestamp;
+  windowEndsAt: admin.firestore.Timestamp;
+  playCount: number;
+  updatedAt: admin.firestore.Timestamp;
 }
