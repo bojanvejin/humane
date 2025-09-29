@@ -16,7 +16,7 @@ import {
 interface PayloadItem {
   value?: any; // Made optional to match Recharts' Payload type
   name?: string;
-  unit?: string;
+  unit?: React.ReactNode; // Updated to React.ReactNode | undefined to match Recharts' Payload type
   dataKey: string | number;
   color?: string;
   fill?: string;
