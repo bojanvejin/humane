@@ -9,19 +9,15 @@ import {
   Legend,
   ResponsiveContainer,
   type LegendType,
-  type TooltipProps, // Import TooltipProps
+  type TooltipProps,
+  type Payload, // Import Payload directly
 } from 'recharts';
-// Removed @mui/material imports as per AI_RULES.md
-// import { Box, Typography } from '@mui/material'; 
-
-// Define Payload type from TooltipProps
-type Payload<TValue, TName> = TooltipProps<TValue, TName>['payload'][number];
 
 interface ChartConfig {
   [key: string]: {
     label?: string;
     color?: string;
-    icon?: ComponentType<{ className?: string; color?: string }>; // Added color prop to icon type
+    icon?: ComponentType<{ className?: string; color?: string }>;
     format?: (value: number) => string;
   };
 }
@@ -43,7 +39,7 @@ const Chart: React.FC<ChartProps> = ({
 }) => {
   const renderTooltipContent = (props: {
     active?: boolean;
-    payload?: Payload<any, any>[];
+    payload?: Payload<any, any>[]; // Use the imported Payload type
     label?: string | number;
   }) => {
     if (props.active && props.payload && props.payload.length) {
