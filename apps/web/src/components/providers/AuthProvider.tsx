@@ -3,18 +3,18 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types'; // Import User type
-import { User as FirebaseUser } from 'firebase/auth'; // Import FirebaseUser type
+import { Models } from 'appwrite'; // Import Appwrite Models
 
 interface AuthContextType {
   user: ReturnType<typeof useAuth>['user'];
-  firebaseUser: FirebaseUser | null; // Added firebaseUser here
+  appwriteAccount: Models.User<Models.Preferences> | null; // Updated type for Appwrite account
   loading: boolean;
   loginWithEmail: (email: string, password: string) => Promise<any>;
   signupWithEmail: (email: string, password: string, displayName: string) => Promise<any>;
   loginWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
-  hasRole: (role: User['role']) => boolean; // Corrected type to use User['role'] directly
-  hasAnyRole: (roles: User['role'][]) => boolean; // Corrected type to use User['role'] directly
+  hasRole: (role: User['role']) => boolean;
+  hasAnyRole: (roles: User['role'][]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

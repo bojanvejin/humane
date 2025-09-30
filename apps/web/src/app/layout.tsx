@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { FirebaseAppCheckProvider } from "@/components/providers/FirebaseAppCheckProvider";
 import { StripeProvider } from "@/components/providers/StripeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { PlayerProvider } from "@/components/player/PlayerProvider";
@@ -33,17 +32,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <FirebaseAppCheckProvider>
-          <AuthProvider>
-            <StripeProvider>
-              <PlayerProvider>
-                {children}
-                <MiniPlayer />
-                <Toaster />
-              </PlayerProvider>
-            </StripeProvider>
-          </AuthProvider>
-        </FirebaseAppCheckProvider>
+        {/* FirebaseAppCheckProvider removed */}
+        <AuthProvider>
+          <StripeProvider>
+            <PlayerProvider>
+              {children}
+              <MiniPlayer />
+              <Toaster />
+            </PlayerProvider>
+          </StripeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
