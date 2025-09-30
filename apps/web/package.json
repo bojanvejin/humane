@@ -74,11 +74,11 @@
     "@types/sonner": "^1.2.0",
     "@types/tailwind-merge": "^1.1.0",
     "@types/react-day-picker": "^8.4.12",
-    "@types/recharts": "^2.0.1",
     "@types/stripe-js": "^3.1.2",
     "@types/react-stripe-js": "^1.6.5",
     "@types/lucide-react": "^0.408.0",
     "@types/vaul": "^0.9.0",
-    "@types/react-hook-form": "^7.52.0"
+    "@types/react-hook-form": "^7.52.0",
+    "@types/clsx": "^2.0.0"
   }
 }
