@@ -18,8 +18,11 @@ export default async ({ req, res }: { req: any, res: any }) => {
     return res.json({ error: 'No user data provided.' }, 400);
   }
 
+  console.log(`Attempting to create user profile for new user: ${newUser.email} (ID: ${newUser.$id})`);
+
   try {
-    const userDocument: Omit<UserDocument, '$id' | '$collectionId' | '$databaseId' | '$createdAt' | '$updatedAt' | '$permissions'> = {
+    // Omit Appwrite's internal document metadata fields as they are set automatically
+    const userDocumentData: Omit<UserDocument, '$id' | '$collectionId' | '$databaseId' | '$createdAt' | '$updatedAt' | '$permissions'> = {
       email: newUser.email,
       displayName: newUser.name,
       photoURL: undefined, // Appwrite doesn't provide photoURL directly on account creation
@@ -32,7 +35,7 @@ export default async ({ req, res }: { req: any, res: any }) => {
       APPWRITE_DATABASE_ID,
       USERS_COLLECTION_ID,
       newUser.$id, // Use the Appwrite user ID as the document ID
-      userDocument,
+      userDocumentData,
       [
         Permission.read(Role.user(newUser.$id)),
         Permission.write(Role.user(newUser.$id)),
@@ -44,6 +47,10 @@ export default async ({ req, res }: { req: any, res: any }) => {
 
   } catch (error: any) {
     console.error(`Error creating user profile for ${newUser.$id}:`, error);
+    // Return a more informative error if it's a conflict (e.g., document already exists)
+    if (error.code === 409) { // Appwrite's conflict status code
+      return res.json({ error: 'User profile already exists.', detail: error.message }, 409);
+    }
     return res.json({ error: 'Internal Server Error', detail: error.message }, 500);
   }
 };
