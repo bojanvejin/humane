@@ -15,8 +15,6 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "firebase-admin": "^13.0.1",
-    "firebase-functions": "^6.0.1",
     "stripe": "^17.1.0",
     "zod": "^3.25.28",
     "cors": "^2.8.5"
@@ -29,10 +27,8 @@
     "eslint-plugin-import": "^2.25.4",
     "typescript": "^5.0.0",
     "@types/cors": "^2.8.17",
-    "@types/firebase-functions": "^4.6.0",
     "@types/zod": "^3.22.2",
-    "@types/stripe": "^8.0.417",
-    "@types/firebase-admin": "^11.5.10"
+    "@types/stripe": "^8.0.417"
   },
   "private": true
 }

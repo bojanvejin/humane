@@ -1,14 +1,10 @@
-import { getAuth } from 'firebase/auth';
-import { app, appCheck } from '../firebase'; // Corrected named imports for app and appCheck
+import { account, functions } from '../appwrite'; // Corrected named imports for app and appCheck
 import { generateUuid } from '../utils/security';
-import { getToken as getAppCheckToken } from 'firebase/app-check'; // Corrected imports
+import { ID } from 'appwrite'; // Import Appwrite ID
 
-// Define the endpoint for the Cloud Function
-const REPORT_PLAY_BATCH_ENDPOINT =
-  process.env.NEXT_PUBLIC_REPORT_PLAY_BATCH_URL ??
-  (process.env.NEXT_PUBLIC_USE_EMULATORS === 'true'
-    ? 'http://127.0.0.1:5002/humane-io/us-central1/reportPlayBatch'
-    : 'https://us-central1-humane-io.cloudfunctions.net/reportPlayBatch');
+// Define the endpoint for the Appwrite Function
+// This will be the Function ID you get from your Appwrite console
+const APPWRITE_REPORT_PLAY_FUNCTION_ID = process.env.NEXT_PUBLIC_APPWRITE_REPORT_PLAY_FUNCTION_ID!;
 
 interface PlayEventPayload {
   eventId: string; // Client-generated UUID for this specific event
@@ -25,29 +21,11 @@ interface PlayEventPayload {
 }
 
 export async function reportPlayBatchToFunction(plays: Omit<PlayEventPayload, 'eventId' | 'sessionId'>[]) {
-  const auth = getAuth(app);
-  const currentUser = auth.currentUser;
+  const currentUser = await account.get();
 
   if (!currentUser) {
     console.error('User not authenticated. Cannot report plays.');
     throw new Error('Authentication required to report plays.');
-  }
-
-  const idToken = await currentUser.getIdToken();
-  
-  // Get App Check token from the initialized App Check instance
-  let appCheckToken: string | undefined;
-  try {
-    if (appCheck) { // Use the globally exported appCheck instance
-      const tokenResult = await getAppCheckToken(appCheck);
-      appCheckToken = tokenResult.token;
-    } else {
-      console.warn('App Check is not initialized. Proceeding without App Check token.');
-    }
-  } catch (error) {
-    console.error('Error getting App Check token:', error);
-    // Depending on your App Check enforcement, you might want to throw here
-    // or proceed without the token (if in debug mode or non-critical path).
   }
 
   // Generate a single sessionId for the entire batch
@@ -60,23 +38,27 @@ export async function reportPlayBatchToFunction(plays: Omit<PlayEventPayload, 'e
   }));
 
   try {
-    const response = await fetch(REPORT_PLAY_BATCH_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`,
-        'X-Firebase-AppCheck': appCheckToken || '', // Include App Check token
-      },
-      body: JSON.stringify({ plays: playsWithIds }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error reporting play batch:', errorData);
-      throw new Error(errorData.message || 'Failed to report play batch.');
+    if (!APPWRITE_REPORT_PLAY_FUNCTION_ID) {
+      console.error('Appwrite Report Play Function ID is not configured.');
+      throw new Error('Appwrite Report Play Function ID is not configured.');
     }
 
-    const result = await response.json();
+    // Execute the Appwrite Function
+    const response = await functions.createExecution(
+      APPWRITE_REPORT_PLAY_FUNCTION_ID,
+      JSON.stringify({ plays: playsWithIds }),
+      false, // async
+      '/report-play-batch', // path
+      'POST' // method
+    );
+
+    // Appwrite function execution response contains stdout, stderr, and status
+    if (response.status !== 200) {
+      console.error('Error reporting play batch:', response.stderr || response.stdout);
+      throw new Error(`Failed to report play batch: ${response.stderr || response.stdout}`);
+    }
+
+    const result = JSON.parse(response.stdout);
     console.log('Play batch reported successfully:', result);
     return result;
   } catch (error) {

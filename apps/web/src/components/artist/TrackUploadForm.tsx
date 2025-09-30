@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from 'react';
 import { useAuthContext } from '@/components/providers/AuthProvider';
-import { getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,16 +9,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { UploadCloud, FileAudio, XCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { app } from '@humane/lib/firebase'; // Import the Firebase app instance
+import { storage } from '@humane/lib/appwrite'; // Import Appwrite storage
+import { ID } from 'appwrite'; // Import Appwrite ID
 
 const TrackUploadForm: React.FC = () => {
-  const { firebaseUser, loading: authLoading } = useAuthContext();
+  const { appwriteAccount, loading: authLoading } = useAuthContext();
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const APPWRITE_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -38,7 +40,7 @@ const TrackUploadForm: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (!firebaseUser || authLoading) {
+    if (!appwriteAccount || authLoading) {
       toast.error('You must be logged in to upload tracks.');
       return;
     }
@@ -46,39 +48,44 @@ const TrackUploadForm: React.FC = () => {
       toast.error('Please select a file to upload.');
       return;
     }
+    if (!APPWRITE_BUCKET_ID) {
+      toast.error('Appwrite storage bucket ID is not configured.');
+      console.error('NEXT_PUBLIC_APPWRITE_BUCKET_ID is not set.');
+      return;
+    }
 
     setIsUploading(true);
     setUploadError(null);
     setUploadSuccess(false);
 
-    const storage = getStorage(app);
-    // Store files in 'masters/{userId}/{fileName}'
-    const storageRef = ref(storage, `masters/${firebaseUser.uid}/${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    try {
+      // Appwrite's upload method doesn't directly provide progress updates in the same way Firebase does.
+      // For a real-time progress bar, you might need a custom implementation or a different SDK.
+      // For now, we'll simulate progress or show a spinner until completion.
+      // The `createFile` method uploads the file.
+      await storage.createFile(
+        APPWRITE_BUCKET_ID,
+        ID.unique(), // Generate a unique file ID
+        file,
+        // You can add permissions here if needed, e.g.,
+        // [`read("user:${appwriteAccount.$id}")`, `write("user:${appwriteAccount.$id}")`]
+      );
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error('Upload failed:', error);
-        setUploadError(`Upload failed: ${error.message}`);
-        toast.error(`Upload failed: ${error.message}`);
-        setIsUploading(false);
-      },
-      () => {
-        // Upload completed successfully
-        setUploadSuccess(true);
-        toast.success('Track uploaded successfully! It will be processed shortly.');
-        setIsUploading(false);
-        setFile(null); // Clear the selected file
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''; // Clear file input
-        }
+      // Simulate progress for demonstration if no direct progress API is available
+      setUploadProgress(100); 
+      setUploadSuccess(true);
+      toast.success('Track uploaded successfully! It will be processed shortly.');
+      setIsUploading(false);
+      setFile(null); // Clear the selected file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Clear file input
       }
-    );
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      setUploadError(`Upload failed: ${error.message}`);
+      toast.error(`Upload failed: ${error.message}`);
+      setIsUploading(false);
+    }
   };
 
   return (

@@ -13,12 +13,8 @@
     "deploy:hosting": "firebase deploy --only hosting"
   },
   "dependencies": {
-    "firebase": "^11.0.1",
-    "firebase-admin": "^13.0.1",
-    "firebase-functions": "^6.0.1",
     "stripe": "^17.1.0",
-    "zod": "^3.25.28",
-    "@firebase/app-check": "^0.10.0"
+    "zod": "^3.25.28"
   },
   "devDependencies": {
     "@dyad-sh/nextjs-webpack-component-tagger": "^0.8.0",
