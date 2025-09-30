@@ -4,6 +4,13 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   },
   "functions": { "source": "functions" },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "emulators": {
     "ui": { "enabled": true, "port": 4002 },
     "functions": { "port": 5001, "host": "127.0.0.1" },
