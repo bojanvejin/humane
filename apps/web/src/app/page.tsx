@@ -3,38 +3,31 @@
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/components/player/PlayerProvider";
 import { PlayableTrack } from "@/types";
-import TrackCard from "@/components/track/TrackCard"; // Import the new TrackCard component
+import TrackCard from "@/components/track/TrackCard";
+import { useTracks } from "@/hooks/useTracks"; // Import the new useTracks hook
+import { Loader2 } from "lucide-react"; // Import Loader2 for loading state
 
 export default function Home() {
-  const { playTrack, playerState } = usePlayer();
+  const { playerState } = usePlayer();
+  const { tracks, loading, error } = useTracks(); // Use the new hook
 
-  // Placeholder track data
-  const placeholderTracks: PlayableTrack[] = [
-    {
-      id: "track-1",
-      title: "A New Beginning",
-      artistName: "Dyad AI",
-      coverArtUrl: "https://images.unsplash.com/photo-1518611012118-6967b0b3f7d7?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      duration: 300, // 5 minutes
-    },
-    {
-      id: "track-2",
-      title: "Echoes of Tomorrow",
-      artistName: "Synthwave Collective",
-      coverArtUrl: "https://images.unsplash.com/photo-1517344493709-27750908897b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-      duration: 240, // 4 minutes
-    },
-    {
-      id: "track-3",
-      title: "Midnight Drive",
-      artistName: "Neon Dreams",
-      coverArtUrl: "https://images.unsplash.com/photo-1517344493709-27750908897b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-      duration: 280, // 4 minutes 40 seconds
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="grid place-items-center min-h-screen p-8 pb-20 sm:p-20">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading tracks...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid place-items-center min-h-screen p-8 pb-20 sm:p-20 text-destructive">
+        <p className="text-lg">Error: {error}</p>
+        <p className="text-muted-foreground">Please check your Appwrite configuration and ensure tracks are published.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-rows-[1fr] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -45,9 +38,13 @@ export default function Home() {
         </p>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {placeholderTracks.map((track) => (
-            <TrackCard key={track.id} track={track} />
-          ))}
+          {tracks.length > 0 ? (
+            tracks.map((track) => (
+              <TrackCard key={track.id} track={track} />
+            ))
+          ) : (
+            <p className="text-muted-foreground col-span-full">No tracks found. Upload some music!</p>
+          )}
         </div>
       </main>
     </div>
