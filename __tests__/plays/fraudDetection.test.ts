@@ -1,4 +1,4 @@
-import { detectSuspiciousPlay } from '../../functions/src/utils/fraudDetection'; // Updated import
+import { detectSuspiciousPlay } from '../../functions/src/utils/fraudDetection';
 import { FraudReason } from '../../functions/src/types'; // Import FraudReason type
 
 describe('Fraud Detection', () => {
