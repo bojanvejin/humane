@@ -1,17 +1,27 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /masters/{allPaths=**} {
-      allow read: if false; // Masters are private
-      allow write: if request.auth != null; // Only authenticated users can upload masters
+    function authed() { return request.auth != null; }
+    function has(role) { return authed() && request.auth.token.roles[role] == true; }
+
+    // Master audio files are private and only writable by the owner
+    match /masters/{uid}/{allPaths=**} {
+      allow read: if false; // private
+      allow write: if authed() && request.auth.uid == uid;
     }
-    match /hls/{allPaths=**} {
-      allow read: if true; // DEV ONLY; tighten with signed URLs/CDN later
-      allow write: if false; // only pipeline
+
+    // HLS streams are public for reading (served via signed URLs/CDN in production)
+    // For development/emulation, we allow read if the file exists.
+    // Writes are restricted to the transcoding pipeline.
+    match /hls/{trackId}/{allPaths=**} {
+      allow read: if true; // Public read for HLS streams
+      allow write: if false; // pipeline only
     }
-    // Deny all other storage operations by default
-    match /{allPaths=**} {
-      allow read, write: if false;
+
+    // Cover art uploads
+    match /cover_art/{uid}/{allPaths=**} {
+      allow read: if true; // Public read for cover art
+      allow write: if authed() && request.auth.uid == uid;
     }
   }
 }
