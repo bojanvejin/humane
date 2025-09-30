@@ -20,6 +20,7 @@ const firebaseConfig = {
   storageBucket: getEnvVar('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
   appId: getEnvVar('NEXT_PUBLIC_FIREBASE_APP_ID'),
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, // Optional, so no strict check
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Added measurementId
 };
 
 const app =
