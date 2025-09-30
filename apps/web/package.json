@@ -77,7 +77,6 @@
     "@types/class-variance-authority": "^0.7.0",
     "@types/react-day-picker": "^8.4.12",
     "@types/recharts": "^2.12.7",
-    "@types/cmdk": "^0.0.4",
     "@types/vaul": "^0.9.4",
     "@types/input-otp": "^1.2.0",
     "@types/react-resizable-panels": "^2.0.5",
