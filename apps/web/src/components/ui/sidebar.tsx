@@ -6,16 +6,16 @@ import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
 import { cn } from "@humane/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button, type ButtonProps } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 const sidebarVariants = cva(
-  "flex flex-col h-full bg-sidebar text-sidebar-foreground",
+  "flex flex-col border-r bg-sidebar text-sidebar-foreground",
   {
     variants: {
       variant: {
-        default: "border-r border-sidebar-border",
-        ghost: "",
+        default: "bg-sidebar text-sidebar-foreground",
+        primary: "bg-sidebar-primary text-sidebar-primary-foreground",
       },
       size: {
         default: "w-64",
@@ -34,7 +34,7 @@ export interface SidebarProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sidebarVariants> {
   asChild?: boolean
-  trigger?: React.ReactNode // Optional trigger for mobile sidebar
+  trigger?: React.ReactNode // Optional trigger for mobile sheet
 }
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
@@ -43,8 +43,8 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
     return (
       <>
-        {/* Mobile Sidebar Trigger */}
-        <div className="lg:hidden">
+        {/* Mobile Sidebar (Sheet) */}
+        <div className="block lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
               {trigger || (
@@ -74,7 +74,10 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         {/* Desktop Sidebar */}
         <Comp
           ref={ref}
-          className={cn(sidebarVariants({ variant, size, className }), "hidden lg:flex")}
+          className={cn(
+            sidebarVariants({ variant, size, className }),
+            "hidden lg:flex" // Hide on mobile, show on large screens
+          )}
           {...props}
         >
           {children}

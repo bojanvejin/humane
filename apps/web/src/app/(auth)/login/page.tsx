@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner'; // Import toast for notifications
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,9 +20,10 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await loginWithEmail(email, password);
-    } catch (error) {
+      toast.success('Logged in successfully!');
+    } catch (error: any) {
       console.error('Login error:', error);
-      // TODO: Show error toast
+      toast.error(error.message || 'Failed to log in. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -31,9 +33,10 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await loginWithGoogle();
-    } catch (error) {
+      toast.success('Logged in with Google successfully!');
+    } catch (error: any) {
       console.error('Google login error:', error);
-      // TODO: Show error toast
+      toast.error(error.message || 'Failed to log in with Google.');
     } finally {
       setIsLoading(false);
     }
