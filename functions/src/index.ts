@@ -6,3 +6,4 @@ export * from './stripe/webhooks';
 export * from './stripe/connect';
 export * from './tracks/processTrackUpload';
 export * from './payouts/calculateUCPSPayouts';
+export * from './auth/onCreate'; // Export the new function
