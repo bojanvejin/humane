@@ -50,6 +50,7 @@ export interface ArtistProfile {
 
 export interface Track {
   id: string;
+  userId: string; // Added to link track to the uploading user
   artistId: string;
   title: string;
   duration: number; // in seconds
@@ -65,11 +66,12 @@ export interface Track {
     tags: string[];
   };
   audioFile: {
-    original: string; // Firebase Storage path
-    hls: string; // Firebase Storage path for HLS stream
+    original: string; // Appwrite Storage file ID
+    hls?: string; // Appwrite Storage path for HLS stream
+    hlsProcessingStatus?: 'pending' | 'processing' | 'completed' | 'failed'; // New status field
     waveform?: number[]; // waveform data for visualization
   };
-  coverArt?: string; // Firebase Storage path
+  coverArt?: string; // Appwrite Storage file ID
   isExplicit: boolean;
   isPublished: boolean;
   createdAt: Date;

@@ -9,12 +9,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { UploadCloud, FileAudio, XCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { storage } from '@humane/lib/appwrite'; // Import Appwrite storage
-import { ID } from 'appwrite'; // Import Appwrite ID
+import { storage, databases } from '@humane/lib/appwrite'; // Import Appwrite storage and databases
+import { ID, Permission, Role } from 'appwrite'; // Import Appwrite ID, Permission, Role
+import { Track } from '@/types'; // Import Track type
 
 const TrackUploadForm: React.FC = () => {
-  const { appwriteAccount, loading: authLoading } = useAuthContext();
+  const { user, appwriteAccount, loading: authLoading } = useAuthContext();
   const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState('');
+  const [artistId, setArtistId] = useState(''); // For now, assume artistId is user.id
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -22,11 +25,12 @@ const TrackUploadForm: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const APPWRITE_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!;
+  const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+  const APPWRITE_TRACKS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_TRACKS_COLLECTION_ID!;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const selectedFile = event.target.files[0];
-      // Basic validation for audio files
       if (!selectedFile.type.startsWith('audio/')) {
         toast.error('Please select an audio file (e.g., WAV, FLAC, MP3).');
         setFile(null);
@@ -36,11 +40,13 @@ const TrackUploadForm: React.FC = () => {
       setUploadError(null);
       setUploadSuccess(false);
       setUploadProgress(0);
+      // Optionally set title from file name
+      setTitle(selectedFile.name.split('.').slice(0, -1).join('.'));
     }
   };
 
   const handleUpload = async () => {
-    if (!appwriteAccount || authLoading) {
+    if (!appwriteAccount || authLoading || !user) {
       toast.error('You must be logged in to upload tracks.');
       return;
     }
@@ -48,9 +54,13 @@ const TrackUploadForm: React.FC = () => {
       toast.error('Please select a file to upload.');
       return;
     }
-    if (!APPWRITE_BUCKET_ID) {
-      toast.error('Appwrite storage bucket ID is not configured.');
-      console.error('NEXT_PUBLIC_APPWRITE_BUCKET_ID is not set.');
+    if (!title.trim()) {
+      toast.error('Please enter a track title.');
+      return;
+    }
+    if (!APPWRITE_BUCKET_ID || !APPWRITE_DATABASE_ID || !APPWRITE_TRACKS_COLLECTION_ID) {
+      toast.error('Appwrite environment variables are not fully configured.');
+      console.error('Missing Appwrite env vars.');
       return;
     }
 
@@ -59,31 +69,61 @@ const TrackUploadForm: React.FC = () => {
     setUploadSuccess(false);
 
     try {
-      // Appwrite's upload method doesn't directly provide progress updates in the same way Firebase does.
-      // For a real-time progress bar, you might need a custom implementation or a different SDK.
-      // For now, we'll simulate progress or show a spinner until completion.
-      // The `createFile` method uploads the file.
-      await storage.createFile(
+      // 1. Upload file to Appwrite Storage
+      const uploadedFile = await storage.createFile(
         APPWRITE_BUCKET_ID,
         ID.unique(), // Generate a unique file ID
         file,
-        // You can add permissions here if needed, e.g.,
-        // [`read("user:${appwriteAccount.$id}")`, `write("user:${appwriteAccount.$id}")`]
+        [
+          Permission.read(Role.any()), // Public read for audio streaming
+          Permission.write(Role.user(appwriteAccount.$id)),
+        ]
       );
 
-      // Simulate progress for demonstration if no direct progress API is available
+      // 2. Create a Track document in Appwrite Database
+      const newTrack: Omit<Track, 'id' | 'createdAt' | 'updatedAt'> = {
+        userId: user.id,
+        artistId: user.id, // For now, assume the uploader is the artist
+        title: title.trim(),
+        duration: 0, // Will be updated by transcoding function
+        accessMode: 'public', // Default access mode
+        collaborators: [],
+        metadata: { tags: [] },
+        audioFile: {
+          original: uploadedFile.$id, // Store the Appwrite file ID
+          hlsProcessingStatus: 'pending', // Initial status
+        },
+        isExplicit: false,
+        isPublished: false,
+      };
+
+      await databases.createDocument(
+        APPWRITE_DATABASE_ID,
+        APPWRITE_TRACKS_COLLECTION_ID,
+        ID.unique(), // Generate a unique document ID for the track
+        newTrack as any, // Cast to any for now due to partial type match with Models.Document
+        [
+          Permission.read(Role.any()), // Public read for track metadata
+          Permission.write(Role.user(appwriteAccount.$id)),
+        ]
+      );
+
       setUploadProgress(100); 
       setUploadSuccess(true);
-      toast.success('Track uploaded successfully! It will be processed shortly.');
-      setIsUploading(false);
-      setFile(null); // Clear the selected file
+      toast.success('Track uploaded and registered successfully! It will be processed shortly.');
+      
+      // Reset form
+      setFile(null);
+      setTitle('');
+      setArtistId('');
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Clear file input
+        fileInputRef.current.value = '';
       }
     } catch (error: any) {
       console.error('Upload failed:', error);
       setUploadError(`Upload failed: ${error.message}`);
       toast.error(`Upload failed: ${error.message}`);
+    } finally {
       setIsUploading(false);
     }
   };
@@ -98,6 +138,19 @@ const TrackUploadForm: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid w-full items-center gap-1.5">
+          <Label htmlFor="track-title">Track Title</Label>
+          <Input
+            id="track-title"
+            type="text"
+            placeholder="My Awesome Track"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isUploading || authLoading}
+            required
+          />
+        </div>
+
+        <div className="grid w-full items-center gap-1.5">
           <Label htmlFor="audio-file">Audio File</Label>
           <Input
             id="audio-file"
@@ -106,6 +159,7 @@ const TrackUploadForm: React.FC = () => {
             onChange={handleFileChange}
             ref={fileInputRef}
             disabled={isUploading || authLoading}
+            required
           />
           {file && (
             <p className="text-sm text-muted-foreground flex items-center gap-2 mt-2">
@@ -136,7 +190,7 @@ const TrackUploadForm: React.FC = () => {
 
         <Button
           onClick={handleUpload}
-          disabled={!file || isUploading || authLoading}
+          disabled={!file || !title.trim() || isUploading || authLoading}
           className="w-full"
         >
           {isUploading ? (
