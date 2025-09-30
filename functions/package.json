@@ -28,7 +28,11 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "typescript": "^5.0.0",
-    "@types/cors": "^2.8.17"
+    "@types/cors": "^2.8.17",
+    "@types/firebase-functions": "^4.6.0",
+    "@types/zod": "^3.22.2",
+    "@types/stripe": "^8.0.417",
+    "@types/firebase-admin": "^11.5.10"
   },
   "private": true
 }
