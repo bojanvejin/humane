@@ -8,7 +8,7 @@ const STORAGE_BUCKET_NAME = process.env.FIREBASE_STORAGE_BUCKET;
 
 export const processTrackUpload = onObjectFinalized({ bucket: STORAGE_BUCKET_NAME }, async (event: StorageEvent) => {
   if (!STORAGE_BUCKET_NAME) {
-    console.error('FIREBASE_STORAGE_BUCKET environment variable is not set.');
+    console.error('FIREBASE_STORAGE_BUCKET environment variable is not set. Please set it in your Firebase project config.');
     return null;
   }
 

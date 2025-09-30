@@ -28,10 +28,10 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHable_KEY;
 
     if (!publishableKey) {
-      console.error('Stripe publishable key is not set. Please set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in your .env.local file.');
+      console.error('Stripe publishable key is not set. Please set NEXT_PUBLIC_STRIPE_PUBLISHable_KEY in your .env.local file.');
       setLoading(false);
       return;
     }

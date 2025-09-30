@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { onDocumentCreated, FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore'; // Import FirestoreEvent and QueryDocumentSnapshot
+import { onDocumentCreated, FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore';
 import { Play, Track, UserTrackAggregate, FraudReason } from '../types';
 import { detectSuspiciousPlay } from '../utils/fraudDetection';
 

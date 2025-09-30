@@ -1,11 +1,11 @@
-import { onRequest, Request, Response } from 'firebase-functions/v2/https'; // Added Request, Response types
+import { onRequest, Request, Response } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import cors from 'cors';
 import { db, FieldValue } from '../firebaseAdmin';
 import { z } from 'zod';
-import { FraudReason } from '../types'; // Import FraudReason
-import { detectSuspiciousPlay } from '../utils/fraudDetection'; // Import fraud detection
-import { hashIpAddress } from '../utils/security'; // Import hashIpAddress
+import { FraudReason } from '../types';
+import { detectSuspiciousPlay } from '../utils/fraudDetection';
+import { hashIpAddress } from '../utils/security';
 
 const corsHandler = cors({ origin: true });
 
@@ -29,7 +29,7 @@ const ReportPlayBatchRequestBodySchema = z.object({
   plays: z.array(PlayEventPayloadSchema).min(1),
 });
 
-export const reportPlayBatch = onRequest(async (req: Request, res: Response) => { // Explicitly typed req and res
+export const reportPlayBatch = onRequest(async (req: Request, res: Response) => {
   return corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed', message: 'Only POST requests are accepted.' });

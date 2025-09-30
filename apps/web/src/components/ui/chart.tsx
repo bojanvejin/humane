@@ -7,206 +7,178 @@ import {
   LineChart,
   Bar,
   BarChart,
+  Pie,
+  PieChart,
+  RadialBar,
+  RadialBarChart,
   Area,
   AreaChart,
   ResponsiveContainer,
+  Scatter,
+  ScatterChart,
   XAxis,
   YAxis,
   Tooltip,
-  type TooltipProps,
   Legend, // Import Legend
 } from 'recharts';
 import { cn } from "@humane/lib/utils"
 
 // Define ChartConfig type
-export type ChartConfig = {
+type ChartConfig = {
   [k: string]: {
-    label?: string;
-    color?: string;
-    icon?: React.ComponentType<{ className?: string }>;
-    type?: "line" | "bar" | "area";
-    axis?: "x" | "y";
-  };
-};
-
-// Define ChartContainer
-interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  config: ChartConfig;
-  children: React.ReactNode;
+    label?: string
+    color?: string
+    icon?: React.ComponentType<{ className?: string }>
+  }
 }
+
+type ChartContextProps = {
+  config: ChartConfig
+}
+
+const ChartContext = React.createContext<ChartContextProps | null>(null)
+
+function useChart() {
+  const context = React.useContext(ChartContext)
+
+  if (!context) {
+    throw new Error("useChart must be used within a <Chart />")
+  }
+
+  return context
+}
+
+type ChartProps = React.ComponentProps<typeof ResponsiveContainer> & {
+  config: ChartConfig
+  children: React.ReactNode
+}
+
+function Chart({ config, className, children, ...props }: ChartProps) {
+  return (
+    <ChartContext.Provider value={{ config }}>
+      <div className={cn("h-[400px] w-full", className)}>
+        <ResponsiveContainer {...props}>{children}</ResponsiveContainer>
+      </div>
+    </ChartContext.Provider>
+  )
+}
+
+type ChartContainerProps = {
+  id?: string
+  children: React.ReactNode
+  className?: string
+} & React.ComponentProps<typeof Chart>
 
 const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerProps>(
-  ({ config, className, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn("flex flex-col items-center justify-center", className)}
-      {...props}
-    >
-      <ResponsiveContainer width="100%" height="100%">
+  ({ id, className, children, config, ...props }, ref) => {
+    const newId = React.useId()
+    const chartId = `chart-${id || newId}`
+
+    return (
+      <Chart config={config} className={className} id={chartId} ref={ref} {...props}>
         {children}
-      </ResponsiveContainer>
-    </div>
-  )
-);
-ChartContainer.displayName = "ChartContainer";
-
-// Define ChartLegend
-interface ChartLegendProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> { // Omit content to avoid conflict
-  legendContent?: React.ReactNode; // Renamed to avoid conflict
-}
-
-const ChartLegend = React.forwardRef<HTMLDivElement, ChartLegendProps>(
-  ({ legendContent, className, ...props }, ref) => (
-    <Legend
-      content={
-        <div ref={ref} className={cn("flex justify-center gap-4 p-4", className)} {...props}>
-          {legendContent}
-        </div>
-      }
-    />
-  )
-);
-ChartLegend.displayName = "ChartLegend";
-
-// Define ChartLegendContent
-interface ChartLegendContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  config?: ChartConfig;
-}
-
-const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendContentProps>(
-  ({ config, className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex gap-2", className)} {...props}>
-      {config && Object.entries(config).map(([key, { label, color }]) => (
-        <div key={key} className="flex items-center gap-1">
-          <span className={cn("h-3 w-3 rounded-full", color)} style={{ backgroundColor: color }} />
-          <span className="text-sm text-muted-foreground">{label}</span>
-        </div>
-      ))}
-    </div>
-  )
-);
-ChartLegendContent.displayName = "ChartLegendContent";
-
-// Define ChartTooltip
-interface ChartTooltipProps extends TooltipProps<any, any> {
-  hideLabel?: boolean;
-}
-
-const ChartTooltip = ({ ...props }: ChartTooltipProps) => { // Removed content from destructuring
-  return (
-    <Tooltip
-      content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string | number }) => {
-        if (active && payload && payload.length) {
-          return (
-            <div className="rounded-lg border bg-background p-2 text-sm shadow-md">
-              {props.hideLabel ? null : <div className="font-medium">{label}</div>}
-              {payload.map((entry: any, index: number) => (
-                <div key={`item-${index}`} className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">{entry.name}:</span>
-                  <span className="font-medium">{entry.value}</span>
-                </div>
-              ))}
-            </div>
-          );
-        }
-        return null;
-      }}
-      {...props}
-    />
-  );
-};
-ChartTooltip.displayName = "ChartTooltip";
-
-// Define ChartTooltipContent
-interface ChartTooltipContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  hideLabel?: boolean;
-}
-
-const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContentProps>(
-  ({ hideLabel, className, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-lg border bg-background p-2 text-sm shadow-md", className)} {...props}>
-      {/* Content will be rendered by Recharts Tooltip's formatter */}
-    </div>
-  )
-);
-ChartTooltipContent.displayName = "ChartTooltipContent";
-
-
-// Helper function to safely convert value to string
-const safeToString = (value: unknown): string => {
-  if (typeof value === 'number' || typeof value === 'string') {
-    return String(value);
+      </Chart>
+    )
   }
-  return '';
-};
+)
+ChartContainer.displayName = "ChartContainer"
 
-// Define the props for the Chart component
-interface ChartComponentProps extends React.HTMLAttributes<HTMLDivElement> {
-  config: ChartConfig;
-  data: Record<string, any>[];
-  chartType?: "line" | "bar" | "area";
-  className?: string;
+type ChartTooltipProps = React.ComponentProps<typeof Tooltip> & {
+  hideLabel?: boolean
+  hideIndicator?: boolean
+  is(segment: string): boolean
 }
 
-const Chart: React.FC<ChartComponentProps> = ({
-  config,
-  data,
-  chartType = "line",
+const ChartTooltip = ({
+  active,
+  payload,
+  label,
   className,
-  ...props
-}) => {
-  const ChartComponent =
-    chartType === "line" ? LineChart : chartType === "bar" ? BarChart : AreaChart;
-  const ChartElement =
-    chartType === "line" ? Line : chartType === "bar" ? Bar : Area;
+  coordinate,
+  hideLabel = false,
+  hideIndicator = false,
+  is = () => false,
+}: ChartTooltipProps) => {
+  if (!active || !payload || payload.length === 0) {
+    return null
+  }
+
+  const { config } = useChart()
+  const tooltipPayload = payload.filter((item) => item.dataKey && item.name)
+
+  if (!tooltipPayload.length) {
+    return null
+  }
 
   return (
-    <ChartContainer config={config} className={cn("min-h-[200px] w-full", className)} {...props}>
-      <ChartComponent
-        accessibilityLayer
-        data={data}
-        margin={{
-          left: 12,
-          right: 12,
-        }}
-      >
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey={Object.keys(config).find(key => config[key]?.axis === 'x')}
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          tickFormatter={(value: any) => safeToString(value)}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value: any) => safeToString(value)}
-        />
-        <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent hideLabel />}
-        />
-        <ChartLegend legendContent={<ChartLegendContent config={config} />} />
-        {Object.entries(config).map(([key, { label, color, type }]) => {
-          if (type === chartType) {
-            return (
-              <ChartElement
-                key={key}
-                dataKey={key}
-                name={label}
-                stroke={color}
-                fill={color}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-            );
-          }
-          return null;
-        })}
-      </ChartComponent>
-    </ChartContainer>
-  );
-};
+    <div
+      className={cn(
+        "grid min-w-[130px] items-center justify-items-stretch whitespace-nowrap rounded-md border border-border bg-background/95 p-2 text-xs shadow-xl backdrop-blur-sm",
+        className
+      )}
+    >
+      {!hideLabel && label ? (
+        <div className="mb-1 font-medium">{label}</div>
+      ) : null}
+      {tooltipPayload.map((item: any) => {
+        const key = item.dataKey as keyof ChartConfig
 
-export { Chart, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent };
+        const indicatorColor = config[key]?.color
+
+        return (
+          <div
+            key={item.dataKey}
+            className={cn(
+              "flex items-center justify-between gap-4",
+              is(item.dataKey as string) && "text-foreground"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              {!hideIndicator ? (
+                <div
+                  className={cn("h-2 w-2 shrink-0 rounded-full", indicatorColor)}
+                />
+              ) : null}
+              <span className="text-muted-foreground">{config[key]?.label || item.name}</span>
+            </div>
+            <span className="font-medium text-foreground">{item.value}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+type ChartTooltipContentProps = React.ComponentProps<typeof ChartTooltip>
+
+const ChartTooltipContent = React.forwardRef<
+  HTMLDivElement,
+  ChartTooltipContentProps
+>(({ ...props }, ref) => {
+  return <ChartTooltip ref={ref} {...props} />
+})
+ChartTooltipContent.displayName = "ChartTooltipContent"
+
+export {
+  Chart,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  RadialBar,
+  RadialBarChart,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+}

@@ -34,9 +34,8 @@ const InputOTPSlot = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
-  // Assert the type of OTPInputContext to ensure 'slots' property is recognized
-  const inputOTPContext = React.useContext(OTPInputContext) as typeof OTPInputContext extends React.Context<infer T> ? T : any;
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
+  const inputOTPContext = React.useContext(OTPInputContext)
+  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
 
   return (
     <div
@@ -63,8 +62,8 @@ const InputOTPSeparator = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div">
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex items-center", className)} {...props}>
-    <Minus className="h-4 w-4" />
+  <div ref={ref} className={cn("flex items-center justify-center", className)} {...props}>
+    <Minus />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"

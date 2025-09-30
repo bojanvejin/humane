@@ -42,35 +42,25 @@ BreadcrumbItem.displayName = "BreadcrumbItem"
 const BreadcrumbLink = React.forwardRef<
   HTMLAnchorElement,
   React.ComponentPropsWithoutRef<"a"> & {
-    asChild?: boolean
+    isCurrentPage?: boolean
   }
->(({ asChild, className, ...props }, ref) => {
+>(({ asChild, className, isCurrentPage = false, ...props }, ref) => {
   const Comp = asChild ? Slot : "a"
 
   return (
     <Comp
       ref={ref}
-      className={cn("transition-colors hover:text-foreground", className)}
+      aria-current={isCurrentPage ? "page" : undefined}
+      className={cn(
+        "transition-colors hover:text-foreground",
+        isCurrentPage && "text-foreground",
+        className
+      )}
       {...props}
     />
   )
 })
 BreadcrumbLink.displayName = "BreadcrumbLink"
-
-const BreadcrumbPage = React.forwardRef<
-  HTMLSpanElement,
-  React.ComponentPropsWithoutRef<"span">
->(({ className, ...props }, ref) => (
-  <span
-    ref={ref}
-    role="link"
-    aria-disabled="true"
-    aria-current="page"
-    className={cn("font-normal text-foreground", className)}
-    {...props}
-  />
-))
-BreadcrumbPage.displayName = "BreadcrumbPage"
 
 const BreadcrumbSeparator = ({
   children,
@@ -92,7 +82,7 @@ const BreadcrumbEllipsis = ({
   className,
   ...props
 }: React.ComponentProps<typeof MoreHorizontal>) => (
-  <li
+  <span
     role="presentation"
     aria-hidden="true"
     className={cn("flex h-9 w-9 items-center justify-center", className)}
@@ -100,7 +90,7 @@ const BreadcrumbEllipsis = ({
   >
     <MoreHorizontal className="h-4 w-4" />
     <span className="sr-only">More</span>
-  </li>
+  </span>
 )
 BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis"
 
@@ -109,7 +99,6 @@ export {
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbPage,
   BreadcrumbSeparator,
   BreadcrumbEllipsis,
 }

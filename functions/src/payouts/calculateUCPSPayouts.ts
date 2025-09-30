@@ -1,6 +1,6 @@
-import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler'; // Added ScheduledEvent type
+import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
-import { db, FieldValue } from '../firebaseAdmin'; // Import db and FieldValue from our shared admin module
+import { db, FieldValue } from '../firebaseAdmin';
 import { Play, Subscription, Payout } from '../types';
 
 // Helper to sum an array of numbers
@@ -9,7 +9,7 @@ const sum = (arr: number[]): number => arr.reduce((acc, val) => acc + val, 0);
 export const calculateUCPSPayouts = onSchedule({
   schedule: '0 3 2 * *', // Runs at 03:00 on the 2nd of every month
   timeZone: 'America/Los_Angeles', // Specify a timezone, e.g., 'America/Los_Angeles'
-}, async (event: ScheduledEvent): Promise<void> => { // Explicitly typed event
+}, async (event: ScheduledEvent): Promise<void> => {
   console.log('Running monthly UCPS payout calculation for period:', event.scheduleTime);
   
   // Derive the period (YYYY-MM) for which payouts are being calculated

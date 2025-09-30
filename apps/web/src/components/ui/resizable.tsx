@@ -5,33 +5,20 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "react-resi
 
 import { cn } from "@humane/lib/utils"
 
-const ResizablePanelGroupComponent = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof ResizablePanelGroup>) => (
-  <ResizablePanelGroup
-    className={cn(
-      "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
-      className
-    )}
-    {...props}
-  />
-)
+const ResizablePanelGroup_ = ResizablePanelGroup
+const ResizablePanel_ = ResizablePanel
+const ResizableHandle_ = ResizableHandle
 
-const ResizablePanelComponent = ResizablePanel
-
-const ResizableHandleComponent = ({
+const ResizableHandleCustom = ({
   withHandle,
   className,
   ...props
-}: React.ComponentProps<typeof ResizableHandle> & {
+}: React.ComponentProps<typeof ResizableHandle_> & {
   withHandle?: boolean
 }) => (
-  <ResizableHandle
+  <ResizableHandle_
     className={cn(
-      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:inset-x-0 data-[panel-group-direction=vertical]:after:top-1/2 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:-translate-y-1/2",
-      withHandle &&
-        "after:bg-border after:opacity-0 hover:after:opacity-100 hover:after:transition-all focus-visible:after:bg-border focus-visible:after:opacity-100 data-[panel-group-direction=vertical]:after:bg-border data-[panel-group-direction=vertical]:hover:after:opacity-100 data-[panel-group-direction=vertical]:focus-visible:after:bg-border data-[panel-group-direction=vertical]:focus-visible:after:opacity-100",
+      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
       className
     )}
     {...props}
@@ -41,11 +28,11 @@ const ResizableHandleComponent = ({
         <GripVertical className="h-2.5 w-2.5" />
       </div>
     )}
-  </ResizableHandle>
+  </ResizableHandle_>
 )
 
 export {
-  ResizablePanelGroupComponent as ResizablePanelGroup,
-  ResizablePanelComponent as ResizablePanel,
-  ResizableHandleComponent as ResizableHandle,
+  ResizablePanelGroup_,
+  ResizablePanel_,
+  ResizableHandleCustom as ResizableHandle,
 }
