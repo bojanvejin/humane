@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import type { WebpackConfigContext } from 'next/dist/server/config-shared';
 
+console.log('Current working directory in apps/web/next.config.ts:', process.cwd());
+
 const nextConfig: NextConfig = {
   webpack: (config: WebpackConfigContext['webpack'], options: WebpackConfigContext) => {
     if (process.env.NODE_ENV === "development") {
