@@ -66,24 +66,8 @@ export const useAuth = () => {
       // After creating the account, create a session
       await account.createEmailPasswordSession(email, password);
 
-      // Create user document in Appwrite database
-      const newUser: User = {
-        id: newAppwriteAccount.$id,
-        email: newAppwriteAccount.email,
-        displayName: displayName,
-        photoURL: undefined, // Appwrite doesn't provide photoURL directly on account creation
-        role: 'fan', // Default role
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      await databases.createDocument(
-        USERS_DATABASE_ID,
-        USERS_COLLECTION_ID,
-        newAppwriteAccount.$id,
-        newUser
-      );
-
+      // The user document in the database will be created by the Appwrite Function (auth/onCreate.ts)
+      // We just need to fetch it after the session is created.
       await fetchCurrentUserAndProfile(); // Refresh user state after signup
       toast.success('Account created and logged in successfully!');
     } catch (error: any) {
