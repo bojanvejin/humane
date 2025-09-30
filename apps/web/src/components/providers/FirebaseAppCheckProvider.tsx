@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { getToken } from 'firebase/app-check';
-import { appCheck } from '@humane/lib/firebase'; // Import the exported appCheck instance
+import { app, appCheck } from '@humane/lib/firebase'; // Import the exported app and appCheck instances
 
 interface AppCheckContextType {
   appCheckToken: string | null;
