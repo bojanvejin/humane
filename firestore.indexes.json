@@ -4,16 +4,16 @@
       "collectionGroup": "plays",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASC" },
-        { "fieldPath": "createdAt", "order": "DESC" }
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "plays",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "trackId", "order": "ASC" },
-        { "fieldPath": "createdAt", "order": "DESC" }
+        { "fieldPath": "trackId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
@@ -21,7 +21,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "artistIds", "arrayConfig": "CONTAINS" },
-        { "fieldPath": "createdAt", "order": "DESC" }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],
