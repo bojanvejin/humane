@@ -3,6 +3,7 @@ import { initializeAppCheck, ReCaptchaV3Provider, AppCheck } from 'firebase/app-
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics'; // Added getAnalytics and isSupported
 
 // Helper function to get environment variables with a check
 function getEnvVar(name: string): string {
@@ -73,6 +74,11 @@ if (typeof window !== 'undefined' && !globalThis.__appCheckInit) {
     }
   }
 }
+
+// ── Analytics (browser only) ───────────────────────────────────────────────────
+export const analyticsPromise = typeof window !== 'undefined' && isSupported()
+  ? getAnalytics(app)
+  : Promise.resolve(null);
 
 // ── Exports ───────────────────────────────────────────────────────────────────
 export const auth = getAuth(app);
