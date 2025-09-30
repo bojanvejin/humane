@@ -1,39 +1,15 @@
 {
+  "files": [],
+  "references": [
+    { "path": "./apps/web" },
+    { "path": "./packages/lib" },
+    { "path": "./functions" }
+  ],
   "compilerOptions": {
-    "target": "es2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./apps/web/src/*"],
-      "@humane/lib/*": ["./packages/lib/src/*"],
-      "@humane/ui/*": ["./packages/ui/src/*"]
+      "@humane/lib/*": ["./packages/lib/src/*"]
     }
-  },
-  "include": [
-    "apps/web/next-env.d.ts",
-    "apps/web/**/*.ts",
-    "apps/web/**/*.tsx",
-    "apps/web/.next/types/**/*.ts",
-    "packages/lib/**/*.ts",
-    "packages/ui/**/*.ts",
-    "packages/ui/**/*.tsx",
-    "functions/**/*.ts"
-  ],
-  "exclude": ["node_modules", "dist", "lib"]
+  }
 }
