@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "turbo run dev --filter=web -- --port 32100",
+    "dev": "turbo run dev --filter=web --port 32100",
     "build": "turbo run build --filter=web",
     "lint": "turbo run lint",
     "test": "turbo run test",
@@ -28,7 +28,7 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "ts-node": "^10.9.2",
-    "turbo": "^2.0.10"
+    "turbo": "^2.5.8"
   },
   "packageManager": "pnpm@9.6.0",
   "workspaces": [
